@@ -9,6 +9,7 @@ add_compile_definitions(SDL_MAIN_HANDLED)
 
 option(ENABLE_USER_BUILD    "Enable user build" OFF)
 option(ENABLE_QT_BUILD      "Enable Qt6 build"  OFF)
+option(ENABLE_XBOX_BUILD    "Enable Xbox build" OFF)  
 
 if (ENABLE_USER_BUILD)
     add_compile_definitions(CHONKYSTATION3_USER_BUILD)
@@ -16,6 +17,10 @@ endif()
 
 if (ENABLE_QT_BUILD)
     add_compile_definitions(CHONKYSTATION3_QT_BUILD)
+endif()
+
+if (ENABLE_XBOX_BUILD)
+    add_compile_definitions(__XBOX_BUILD)   
 endif()
 
 add_subdirectory(Dependencies/OpenGL)
