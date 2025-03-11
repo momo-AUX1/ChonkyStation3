@@ -13,6 +13,21 @@ SDL_GameController* findController() {
     return nullptr;
 }
 
+#ifdef __XBOX_BUILD
+GameWindow::GameWindow(SDL_Window* externalWindow) : window(externalWindow) {
+    printf("GameWindow::GameWindow: Constructor called with externalWindow = %p\n", externalWindow);
+    // Do not call SDL_Init or create a window/context here host already did it.
+    if (!window) {
+        Helpers::panic("GameWindow::GameWindow: Invalid external window provided\n");
+    }
+    if (SDL_GL_GetCurrentContext() == nullptr) {
+        Helpers::panic("GameWindow::GameWindow: No active OpenGL context. Ensure the host creates one.\n");
+    }
+    printf("GameWindow::GameWindow: Successfully constructed.\n");
+}
+
+#else
+
 GameWindow::GameWindow() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
         Helpers::panic("Failed to initialize SDL\n");
@@ -22,6 +37,65 @@ GameWindow::GameWindow() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 }
 
+#endif
+
+
+#ifdef __XBOX_BUILD
+
+void GameWindow::run(PlayStation3* ps3) {
+    printf("GameWindow::run: Called with ps3 pointer = %p\n", ps3);
+    this->ps3 = ps3;
+
+    // Ensure we are using the external window:
+    SDL_Window* currentWindow = SDL_GL_GetCurrentWindow();
+    printf("GameWindow::run: SDL_GL_GetCurrentWindow() returned %p\n", currentWindow);
+    if (currentWindow != window) {
+        printf("GameWindow::run: Updating internal window pointer from %p to %p\n", window, currentWindow);
+        window = currentWindow;
+    }
+
+    // Update window title based on the current game (doesn't do anything in UWP).
+    if (!ps3->curr_game.id.empty()) {
+        title_game = ps3->curr_game.title;
+        printf("GameWindow::run: Using game title: %s\n", title_game.c_str());
+    } else {
+        title_game = ps3->elf_path.filename().generic_string();
+        printf("GameWindow::run: Using ELF file name as title: %s\n", title_game.c_str());
+    }
+    std::string title = std::format("ChonkyStation3 | {}", title_game);
+    printf("GameWindow::run: Setting window title to: %s\n", title.c_str());
+    SDL_SetWindowTitle(window, title.c_str());
+
+    // Debug prints for run initialization (Doesn't show in UWP but useful in mac host for debugging).
+    printf("\nGameWindow::run: EXECUTING\n");
+    printf("GameWindow::run: ---------\n\n");
+
+    quit = false;
+    fullscreen = false;
+    vsync_enabled = false;
+    frame_count = 0;
+    last_time = SDL_GetTicks64() / 1000.0;
+    curr_time = 0;
+    ppu_usage = 0;
+
+    controller = findController();
+
+    printf("GameWindow::run: Setting flip handler.\n");
+    ps3->setFlipHandler(std::bind(&GameWindow::flipHandler, this));
+    
+    printf("GameWindow::run: Initializing OpenGL settings via ps3->rsx.initGL()\n");
+    ps3->rsx.initGL();
+    
+    printf("GameWindow::run: Entering main loop.\n");
+    while (!quit) {
+        printf("GameWindow::run: Loop iteration\n");
+        ps3->run();
+    }
+    printf("GameWindow::run: Exiting main loop.\n");
+    // Do not delete the window or context here since the host owns them.
+}
+
+#else
 void GameWindow::run(PlayStation3* ps3) {
     this->ps3 = ps3;
 
@@ -74,6 +148,7 @@ void GameWindow::run(PlayStation3* ps3) {
     SDL_DestroyWindow(window);
     return;
 }
+#endif
 
 // Will be called on every RSX flip
 void GameWindow::flipHandler() {
@@ -97,6 +172,12 @@ void GameWindow::flipHandler() {
 
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
+        #ifdef __XBOX_BUILD
+        // this could honestly be done once but better safe than sorry!
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        #endif
         switch (e.type) {
         case SDL_QUIT: {
             quit = true;

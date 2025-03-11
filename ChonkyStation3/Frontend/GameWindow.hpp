@@ -11,7 +11,11 @@
 
 class GameWindow {
 public:
+    #ifdef __XBOX_BUILD
+    GameWindow(SDL_Window* externalWindow);
+    #else
     GameWindow();
+    #endif
     void run(PlayStation3* ps3);
     void flipHandler();
 
