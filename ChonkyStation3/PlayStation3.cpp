@@ -7,6 +7,28 @@ PlayStation3::PlayStation3(const fs::path& executable) : elf_parser(executable),
     
     module_manager.init();
 
+    #ifdef __XBOX_BUILD
+    // TODO: Implment WinRT apis via DLL or something to make the filesystem in local state
+    std::string basePath = "E:/";
+    std::filesystem::path devFlashFolder = std::filesystem::path(basePath) / "dev_flash";
+    std::filesystem::path devHdd0Folder  = std::filesystem::path(basePath) / "dev_hdd0";
+    std::filesystem::path devHdd1Folder  = std::filesystem::path(basePath) / "dev_hdd1";
+    std::filesystem::path devUsb000Folder = std::filesystem::path(basePath) / "dev_usb000";
+    std::filesystem::path appHomeFolder  = std::filesystem::path(basePath) / "app_home";
+    
+    std::filesystem::create_directories(devFlashFolder);
+    std::filesystem::create_directories(devHdd0Folder);
+    std::filesystem::create_directories(devHdd1Folder);
+    std::filesystem::create_directories(devUsb000Folder);
+    std::filesystem::create_directories(appHomeFolder);
+    
+    fs.mount(Filesystem::Device::DEV_FLASH, devFlashFolder.string().c_str());
+    fs.mount(Filesystem::Device::DEV_HDD0, devHdd0Folder.string().c_str());
+    fs.mount(Filesystem::Device::DEV_HDD1, devHdd1Folder.string().c_str());
+    fs.mount(Filesystem::Device::DEV_USB000, devUsb000Folder.string().c_str());
+    fs.mount(Filesystem::Device::APP_HOME, appHomeFolder.string().c_str());
+
+    #else
     // Initialize filesystem
     fs.mount(Filesystem::Device::DEV_FLASH, "./Filesystem/dev_flash/");
     fs.mount(Filesystem::Device::DEV_HDD0, "./Filesystem/dev_hdd0/");
@@ -14,6 +36,7 @@ PlayStation3::PlayStation3(const fs::path& executable) : elf_parser(executable),
     fs.mount(Filesystem::Device::DEV_USB000, "./Filesystem/dev_usb000/");
     fs.mount(Filesystem::Device::APP_HOME, "./Filesystem/app_home/");
     fs.initialize();
+    #endif
 
     // An executable was passed as CLI argument
     if (!(executable.generic_string() == "")) {
@@ -37,12 +60,17 @@ void PlayStation3::gameSelector() {
     }
     // Ask the user what game to run
     int idx;
+    #ifdef __XBOX_BUILD
+    // TODO: Xbox doesn't support std::cin at least not to my knwoledge this is used TEMPORARILY until i finish adding the XMB UI
+    idx = 0;
+    #else
     printf("Enter game to run (index): ");
     std::cin >> idx;
     while (idx < 0 || idx >= game_loader.games.size()) {
         printf("Invalid index. Retry: ");
         std::cin >> idx;
     }
+    #endif
 
     loadGame(game_loader.games[idx]);
 }
