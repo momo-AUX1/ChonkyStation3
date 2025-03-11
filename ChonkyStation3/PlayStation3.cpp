@@ -137,7 +137,7 @@ void PlayStation3::run() {
 static constexpr int reschedule_every_n_blocks = 256;
 void PlayStation3::step() {
     ppu->step();
-    spu->step();
+    //spu->step(); Doesn't work yet
 
     if (force_scheduler_update || curr_block_cycles++ >= 2048) {
         scheduler.tick(curr_block_cycles);
