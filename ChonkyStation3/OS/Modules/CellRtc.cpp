@@ -15,9 +15,9 @@ u64 CellRtc::cellRtcGetCurrentClockLocalTime() {
     std::tm local_tm;
     #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__XBOX_BUILD)
     localtime_s(&local_tm, &now_time);
-#else
+    #else
     localtime_r(&now_time, &local_tm);
-#endif
+    #endif
 
     const int year      = local_tm.tm_year + 1900;
     const int month     = local_tm.tm_mon  + 1;
