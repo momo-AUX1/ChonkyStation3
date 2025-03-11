@@ -13,7 +13,7 @@ u64 CellRtc::cellRtcGetCurrentClockLocalTime() {
 
     // Convert to local time
     std::tm local_tm;
-#ifdef _MSC_VER
+    #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__XBOX_BUILD)
     localtime_s(&local_tm, &now_time);
 #else
     localtime_r(&now_time, &local_tm);
