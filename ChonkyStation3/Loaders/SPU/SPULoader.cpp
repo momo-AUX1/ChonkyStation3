@@ -82,6 +82,9 @@ void SPULoader::load(u32 img_ptr, sys_spu_image* img) {
             }
             n_segs++;
         }
+        else {
+            Helpers::panic("SPULoader::load: unimplemented segment type %d\n", seg->get_type());
+        }
     }
 
     const u32 entry = elf.get_entry();

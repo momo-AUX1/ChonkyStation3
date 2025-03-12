@@ -276,7 +276,7 @@ void Memory::reserveAddress(u64 vaddr, size_t size, u64 thread_id, std::optional
     // If this address was already reserved, call the old reservation lost handler (if present), unless the address is being reserved again by the same thread
     if (reservations.contains(vaddr) && !is_spu) {
         if (reservations[vaddr].thread_id != thread_id) {
-            printf("n_handlers: %lld\n", reservations[vaddr].reservation_lost_handlers.size());
+            //printf("n_handlers: %lld\n", reservations[vaddr].reservation_lost_handlers.size());
             for (auto& handler : reservations[vaddr].reservation_lost_handlers)
                 handler();
         }

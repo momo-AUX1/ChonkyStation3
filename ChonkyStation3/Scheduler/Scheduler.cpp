@@ -4,13 +4,10 @@
 void Scheduler::tick(u64 cycles) {
     time += cycles;
 
-    for (int i = 0; i < events.size(); i++) {
-        if (time >= events.top().time) {
-            auto event = events.top();
-            events.pop();
-            event.func();
-        }
-        else break;
+    while (events.size() && time >= events.top().time) {
+        auto event = events.top();
+        events.pop();
+        event.func();
     }
 }
 

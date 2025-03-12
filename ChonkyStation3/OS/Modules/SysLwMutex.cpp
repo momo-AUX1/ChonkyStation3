@@ -5,7 +5,7 @@
 u64 SysLwMutex::sysLwMutexLock() {
     const u32 ptr = ARG0;
     const u64 timeout = ARG1;
-    log("sysLwMutexLock(ptr: 0x%08x, timeout: %lld)\n", ptr, timeout);
+    //log("sysLwMutexLock(ptr: 0x%08x, timeout: %lld)\n", ptr, timeout);
 
     LwMutex* mtx = (LwMutex*)ps3->mem.getPtr(ptr);
     if (!mtx->sleep_queue) {
@@ -50,7 +50,7 @@ u64 SysLwMutex::sysLwMutexCreate() {
     mtx->attribute = attrib->protocol | attrib->recursive;
     mtx->recursive_count = 0;
     mtx->sleep_queue = lv2_mtx->handle();   // The real CellOS would store actual information here - we can just store our mutex id instead (this information is hidden from games anyway)
-    printf("handle: 0x%08x\n", lv2_mtx->handle());
+
     return Result::CELL_OK;
 }
 

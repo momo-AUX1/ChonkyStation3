@@ -47,7 +47,7 @@ void SPUThread::loadImage(sys_spu_image* img) {
 }
 
 void SPUThread::reschedule() {
-    ps3->scheduler.push(std::bind(&SPUThreadManager::reschedule, ps3->spu_thread_manager), ps3->curr_block_cycles, "spu thread reschedule");
+    ps3->scheduler.push(std::bind(&SPUThreadManager::reschedule, &ps3->spu_thread_manager), ps3->curr_block_cycles, "spu thread reschedule");
     ps3->forceSchedulerUpdate();
 }
 
@@ -70,39 +70,66 @@ void SPUThread::wakeUp() {
 }
 
 void SPUThread::LocklineWaiter::waiter() {
+    //printf("waiter\n");
+    u64 curr = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    u64 elapsed;
+    
     while (is_waiting) {
+        // Did the data change?
         if (std::memcmp(reservation.data, ps3->mem.getPtr(reservation.addr), 128)) {
-            ps3->spu_thread_manager.getThreadByID(waiter_id)->sendLocklineLostEvent(reservation.addr);
+            is_waiting = false;
+        }
+
+        // Check for timeout
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - curr;
+        if (elapsed > 1000) {
+            //printf("Timeout\n");
+            //exit(0);
             is_waiting = false;
         }
     }
+    
+    // The lockline reservation was lost
+    if (!acquired)  // Set by i.e. PUTLLC
+        ps3->spu_thread_manager.getThreadByID(waiter_id)->sendLocklineLostEvent(reservation.addr);
 }
 
 void SPUThread::LocklineWaiter::begin(Reservation reservation) {
-    if (is_waiting) end();  // End the current waiter if it was already active
+    //printf("begin\n");
+    if (is_waiting) {
+        // End the current waiter if it was already active
+        acquired = true;
+        end();  
+    }
     // This happens when the lockline is written, waiter() will set is_waiting to false but the thread will still be waiting to be joined
-    if (waiter_thread.joinable()) waiter_thread.join();
+    if (waiter_thread.joinable()) {
+        acquired = true;
+        waiter_thread.join();
+    }
 
     this->reservation = reservation;
     is_waiting = true;
+    acquired = false;
     waiter_thread = std::thread(&LocklineWaiter::waiter, this);
 }
 
 void SPUThread::LocklineWaiter::end() {
-    if (!is_waiting) Helpers::panic("LocklineWaiter: tried to end waiter, but the waiter was already inactive\n");
+    //printf("end\n");
+    //if (!is_waiting) Helpers::panic("LocklineWaiter: tried to end waiter, but the waiter was already inactive\n");
 
     is_waiting = false;
+    acquired = true;
     waiter_thread.join();
 }
 
 void SPUThread::sendLocklineLostEvent(u32 addr) {
     if (Helpers::inRangeSized<u32>(addr, reservation.addr, 128)) {
-        if (std::memcmp(reservation.data, ps3->mem.getPtr(reservation.addr), 128)) {
-            log("Lockline lost, sending event\n");
+        //if (std::memcmp(reservation.data, ps3->mem.getPtr(reservation.addr), 128)) {
+            //log("Lockline lost, sending event\n");
             event_stat.lr = true;
             reservation.addr = 0;
             wakeUpIfEvent();
-        }
+        //}
     }
 }
 
@@ -202,12 +229,13 @@ void SPUThread::doCmd(u32 cmd) {
        
     case GET: {
         log("GET\n");
-        std::memcpy(&ls[lsa], ps3->mem.getPtr(eal), size);
+        std::memcpy(&ls[lsa & 0x3ffff], ps3->mem.getPtr(eal), size);
         break;
     }
 
     case PUTLLC: {
         log("PUTLLC ");
+        lockline_waiter->end();
 
         bool success = true;
         if (eal != reservation.addr) success = false;
@@ -217,9 +245,8 @@ void SPUThread::doCmd(u32 cmd) {
 
         // Conditionally write
         if (success) {
-            std::memcpy(ps3->mem.getPtr(eal), &ls[lsa], 128);
+            std::memcpy(ps3->mem.getPtr(eal), &ls[lsa & 0x3ffff], 128);
             reservation.addr = 0;
-            lockline_waiter->end();
         }
 
         // Update atomic stat
@@ -239,7 +266,13 @@ void SPUThread::doCmd(u32 cmd) {
         std::memcpy(reservation.data, ps3->mem.getPtr(eal), 128);
         
         // Copy it to local storage
-        std::memcpy(&ls[lsa], ps3->mem.getPtr(eal), 128);
+        std::memcpy(&ls[lsa & 0x3ffff], ps3->mem.getPtr(eal), 128);
+
+        /*for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 4; j++)
+                printf("0x%08x ", Helpers::bswap<u32>(*(u32*)&ls[lsa + (i * 0x10) + (j * 4)]));
+            printf("\n");
+        }*/
 
         // Update atomic stat
         atomic_stat = 0;            // It gets overwritten on every command

@@ -177,7 +177,7 @@ u64 SysPrxForUser::sys_spu_image_import() {
     const u32 image_ptr = ARG0;
     const u32 src = ARG1;
     const u32 type = ARG2;
-    log("sys_spu_image_import(image_ptr: 0x%08x, src: 0x%08x, type: 0x%08x) STUBBED\n", image_ptr, src, type);
+    log("sys_spu_image_import(image_ptr: 0x%08x, src: 0x%08x, type: 0x%08x)\n", image_ptr, src, type);
     
     SPULoader loader = SPULoader(ps3);
     sys_spu_image* image = (sys_spu_image*)ps3->mem.getPtr(image_ptr);

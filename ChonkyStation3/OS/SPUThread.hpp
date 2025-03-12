@@ -122,7 +122,7 @@ public:
 
     struct Reservation {
         u32 addr;
-        u32 data[128];
+        u8 data[128];
     };
     Reservation reservation;
 
@@ -138,6 +138,7 @@ public:
 
     private:
         std::atomic<bool> is_waiting = false;
+        std::atomic<bool> acquired = false;
         Reservation reservation;
         std::thread waiter_thread;
     };

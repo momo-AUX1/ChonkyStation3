@@ -13,7 +13,7 @@ void SPUThreadManager::contextSwitch(SPUThread& thread) {
     if (current_thread && current_thread->id == thread.id) return;
 
     if (current_thread)
-        log("Switched from thread \"%s\" to thread \"%s\"\n", current_thread->name.c_str(), thread.name.c_str());
+        log("Switched from thread %d \"%s\" to thread %d \"%s\"\n", current_thread->id, current_thread->name.c_str(), thread.id, thread.name.c_str());
     else
         log("Switched to thread \"%s\"\n", thread.name.c_str());
 

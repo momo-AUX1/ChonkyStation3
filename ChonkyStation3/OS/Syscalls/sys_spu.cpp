@@ -15,7 +15,7 @@ u64 Syscall::sys_raw_spu_create() {
     log_sys_spu("sys_raw_spu_create(id_ptr: 0x%08x, attr_ptr: 0x%08x) STUBBED\n", id_ptr, attr_ptr);
 
     ps3->mem.write<u32>(id_ptr, 0);
-    ps3->mem.spu.alloc(SPU_MEM_SIZE);
+    //ps3->mem.spu.alloc(SPU_MEM_SIZE);
     
     return Result::CELL_OK;
 }
