@@ -61,7 +61,7 @@ For MSYS2:
 
 ```
 pacman -Syu
-pacman -S --needed base-devel mingw-w64-x86_64-SDL2
+pacman -S --needed base-devel mingw-w64-x86_64-SDL2 mingw-w64-x86_64-cmake
 ```
 
 For SDL2 UWP:
