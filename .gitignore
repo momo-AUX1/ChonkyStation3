@@ -1,3 +1,8 @@
 .vs/
 out/
+build/
+buildmingw/
+buildxbox/
+buildosx/
 CMakeSettings.json
+.DS_Store
