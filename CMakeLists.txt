@@ -59,7 +59,7 @@ if (NOT DEFINED __XBOX_BUILD)
     #for desktop proceed as normal
 else()
     target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash)
-    #for uwp we use a dynamic SDL2 to use a UWP capable SDL2
+    #for uwp we use dynamic SDL2 
 endif()
 
 
