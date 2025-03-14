@@ -5,6 +5,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __XBOX_BUILD
+#include <cstdio>
+#endif
+
 #ifdef _WIN32
     #define EXPORT __declspec(dllexport)
 #else
@@ -21,6 +25,9 @@
 #ifdef __XBOX_BUILD
 extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_context, int argc, char** argv) {
     try {
+        if (!freopen("E:/PS3_LOGS.txt", "w", stdout)) {
+            fprintf(stderr, "Failed to open log file for writing\n");
+        }
         printf("ChonkyStation3 external_main: Started\n");
         
         // Make the GL context current on this thread.
