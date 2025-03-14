@@ -7,6 +7,7 @@
 
 #ifdef __XBOX_BUILD
 #include <cstdio>
+#include <fstream>
 #endif
 
 #ifdef _WIN32
@@ -23,11 +24,26 @@
 #endif
 
 #ifdef __XBOX_BUILD
+
+void redirect_output(const char* filename) {
+    static std::ofstream log_file(filename, std::ios::trunc);
+
+    if (!log_file) {
+        std::cerr << "Failed to open log file!" << std::endl;
+        return;
+    }
+
+    FILE* fp = freopen(filename, "w", stdout);
+    if (!fp) {
+        std::cerr << "Failed to redirect stdout!" << std::endl;
+    }
+
+    std::cout.rdbuf(log_file.rdbuf());
+}
+
 extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_context, int argc, char** argv) {
     try {
-        if (!freopen("E:/PS3_LOGS.txt", "w", stdout)) {
-            fprintf(stderr, "Failed to open log file for writing\n");
-        }
+        redirect_output("E:/PS3_LOGS.txt");
         printf("ChonkyStation3 external_main: Started\n");
         
         // Make the GL context current on this thread.
@@ -81,6 +97,7 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         return -1;
     }
 }
+
 #else
 
 int main(int argc, char** argv) {
