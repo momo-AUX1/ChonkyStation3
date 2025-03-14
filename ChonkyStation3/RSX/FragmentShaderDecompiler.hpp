@@ -13,6 +13,11 @@
 #include <FragmentInstruction.hpp>
 #include <RSXShaderOpcodes.hpp>
 
+#ifdef __XBOX_BUILD
+#ifdef CONST
+#undef CONST
+#endif
+#endif
 
 // Circular dependency
 class PlayStation3;

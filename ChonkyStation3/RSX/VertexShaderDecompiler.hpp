@@ -12,6 +12,11 @@
 
 #include <RSXShaderOpcodes.hpp>
 
+#ifdef __XBOX_BUILD
+#ifdef CONST
+#undef CONST
+#endif
+#endif
 
 class VertexShaderDecompiler {
 public:
