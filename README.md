@@ -73,8 +73,8 @@ To compile for Xbox, enable the Xbox build flag using CMake:
 
 ```
 mkdir buildxbox && cd buildxbox
-cmake -DENABLE_XBOX_BUILD=ON ..
-make
+cmake -G "MinGW Makefiles" -DENABLE_XBOX_BUILD=ON ..
+mingw32-make
 ```
 
 4. Running on Xbox
