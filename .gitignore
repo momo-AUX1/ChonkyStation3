@@ -4,6 +4,5 @@ build/
 buildmingw/
 buildxbox/
 buildosx/
-Dependencies/
 CMakeSettings.json
 .DS_Store
