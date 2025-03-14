@@ -54,12 +54,10 @@ target_include_directories(ChonkyStation3 PUBLIC Dependencies/xxHash)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/lodepng)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/tinyfiledialogs)
 
-if (NOT DEFINED __XBOX_BUILD)
-    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2-static xxHash::xxhash)
-    #for desktop proceed as normal
+if (NOT ENABLE_XBOX_BUILD)  
+    add_executable(ChonkyStation3)
 else()
-    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash)
-    #for uwp we use dynamic SDL2 
+    add_library(ChonkyStation3 SHARED)
 endif()
 
 
