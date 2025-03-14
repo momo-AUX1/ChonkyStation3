@@ -54,7 +54,7 @@ target_include_directories(ChonkyStation3 PUBLIC Dependencies/xxHash)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/lodepng)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/tinyfiledialogs)
 
-if (NOT ENABLE_XBOX_BUILD)  
+if (NOT ENABLE_XBOX_BUILD)  # Changed from __XBOX_BUILD
     add_executable(ChonkyStation3)
 else()
     add_library(ChonkyStation3 SHARED)
