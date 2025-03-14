@@ -28,7 +28,7 @@ add_subdirectory(Dependencies/SDL)
 add_subdirectory(Dependencies/xxHash/cmake_unofficial EXCLUDE_FROM_ALL)
 
 
-if (NOT DEFINED __XBOX_BUILD)
+if (NOT ENABLE_XBOX_BUILD)  
     add_executable(ChonkyStation3)
 else()
     add_library(ChonkyStation3 SHARED)
@@ -54,10 +54,12 @@ target_include_directories(ChonkyStation3 PUBLIC Dependencies/xxHash)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/lodepng)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/tinyfiledialogs)
 
-if (NOT ENABLE_XBOX_BUILD)  # Changed from __XBOX_BUILD
-    add_executable(ChonkyStation3)
+if (NOT DEFINED __XBOX_BUILD)
+    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2-static xxHash::xxhash)
+    #for desktop proceed as normal
 else()
-    add_library(ChonkyStation3 SHARED)
+    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash)
+    #for uwp we use dynamic SDL2 
 endif()
 
 
