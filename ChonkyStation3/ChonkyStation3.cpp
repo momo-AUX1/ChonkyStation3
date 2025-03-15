@@ -5,6 +5,21 @@
 #include <windows.h>
 #endif
 
+
+
+#ifdef __XBOX_BUILD
+#include <cstdio>
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <imgui.h>
+#include <cstdlib>
+#include <stdexcept>
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
+#endif
+
 #ifdef _WIN32
     #define EXPORT __declspec(dllexport)
 #else
@@ -19,27 +34,225 @@
 #endif
 
 #ifdef __XBOX_BUILD
-#include <cstdlib> 
-#include <stdexcept>
+
+static void ShowCriticalAlertAndFreeze(const std::string& message) 
+{
+    SDL_Window* currentWindow  = SDL_GL_GetCurrentWindow();
+    SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL;
+
+    ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
+    ImGui_ImplOpenGL3_Init("#version 410");
+
+    while (true) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT) {
+                exit(0);
+            }
+        }
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        int w, h;
+        SDL_GetWindowSize(currentWindow, &w, &h);
+        ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f),
+                                ImGuiCond_Always,
+                                ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_Always);
+
+        ImGui::Begin("Critical Error", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped("%s", message.c_str());
+        ImGui::Text("Application will now freeze.");
+        ImGui::End();
+
+        ImGui::Render();
+        SDL_GL_MakeCurrent(currentWindow, currentContext);
+        glViewport(0, 0, w, h);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        SDL_GL_SwapWindow(currentWindow);
+        SDL_Delay(16);
+    }
+}
+
+static void ShowAlertWithOK(const std::string& message)
+{
+    SDL_Window* currentWindow  = SDL_GL_GetCurrentWindow();
+    SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL; 
+
+    ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
+    ImGui_ImplOpenGL3_Init("#version 410");
+
+    bool done = false;
+    while (!done) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT) {
+                exit(0);
+            }
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RETURN) {
+                done = true;
+            }
+            if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+                event.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
+                done = true;
+            }
+        }
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        int w, h;
+        SDL_GetWindowSize(currentWindow, &w, &h);
+        ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f),
+                                ImGuiCond_Always,
+                                ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_Always);
+
+        ImGui::Begin("Alert", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped("%s", message.c_str());
+        ImGui::Text("Press Enter or A to continue.");
+        ImGui::End();
+
+        ImGui::Render();
+        SDL_GL_MakeCurrent(currentWindow, currentContext);
+        glViewport(0, 0, w, h);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        SDL_GL_SwapWindow(currentWindow);
+        SDL_Delay(16);
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+}
+
+static void PreBootChecks() 
+{
+
+    const char* localStatePtr = std::getenv("CHONKYSTATION3_LOCAL_STATE_PATH");
+    std::filesystem::path externalPath;
+    if (localStatePtr && *localStatePtr) {
+        externalPath = std::filesystem::path(localStatePtr) / "dev_flash" / "sys" / "external";
+        std::cout << "Using localState-based externalPath: " << externalPath.string() << std::endl;
+    } else {
+        externalPath = "dev_flash/sys/external";
+        std::cout << "No localState path set; using default externalPath: " << externalPath.string() << std::endl;
+    }
+
+    if (!std::filesystem::exists(externalPath)) {
+        std::cout << "No '" << externalPath.string() 
+                  << "' found. Assuming first-time setup. Skipping game/EBOOT checks.\n";
+        return;
+    }
+
+    int prxCount = 0;
+    int picCount = 0;
+    for (auto& entry : std::filesystem::directory_iterator(externalPath)) {
+        if (!entry.is_regular_file()) continue;
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext == ".prx") prxCount++;
+        if (ext == ".pic") picCount++;
+    }
+    if (prxCount == 0 || picCount == 0) {
+        ShowCriticalAlertAndFreeze(
+            "Mismatch in dev_flash/sys/external: Missing either .prx or .pic files.\n"
+            "Application will freeze now."
+        );
+    }
+
+    std::filesystem::path gamesPath;
+    if (localStatePtr && *localStatePtr) {
+        gamesPath = std::filesystem::path(localStatePtr) / "dev_hdd0" / "game";
+        std::cout << "Using localState-based gamesPath: " << gamesPath.string() << std::endl;
+    } else {
+        gamesPath = "dev_hdd0/game";
+        std::cout << "No localState path set; using default gamesPath: " << gamesPath.string() << std::endl;
+    }
+    std::vector<std::string> missingGames;
+
+    std::cout << "Checking games path: " << gamesPath.string() << std::endl;
+    if (std::filesystem::exists(gamesPath) && std::filesystem::is_directory(gamesPath)) {
+        for (auto& dir : std::filesystem::directory_iterator(gamesPath)) {
+            if (!dir.is_directory()) continue;
+
+            std::cout << "Found game folder: " << dir.path().string() << std::endl;
+
+            std::filesystem::path usrDir = dir.path() / "USRDIR";
+            bool foundEBOOT = false;
+
+            if (std::filesystem::exists(usrDir) && std::filesystem::is_directory(usrDir)) {
+                std::cout << "  Checking USRDIR: " << usrDir.string() << std::endl;
+                for (auto& file : std::filesystem::directory_iterator(usrDir)) {
+                    if (!file.is_regular_file()) continue;
+                    std::string filename = file.path().filename().string();
+                    std::string lowerFilename = filename;
+                    std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+                    std::cout << "    Checking file: " << filename << std::endl;
+                    if (lowerFilename == "eboot.elf") {
+                        std::cout << "    Found EBOOT.elf in " << usrDir.string() << std::endl;
+                        foundEBOOT = true;
+                        break;
+                    }
+                }
+            } else {
+                std::cout << "  USRDIR not found at: " << usrDir.string() << std::endl;
+            }
+
+            if (!foundEBOOT) {
+                missingGames.push_back(dir.path().filename().string());
+                std::cout << "  *** EBOOT.elf missing for " << dir.path().filename().string() << std::endl;
+            }
+        }
+    } else {
+        std::cout << "gamesPath not found or not a directory: " << gamesPath.string() << std::endl;
+    }
+
+    if (!missingGames.empty()) {
+        std::string msg = "The following games are missing EBOOT.elf and may not boot:\n";
+        for (auto& name : missingGames) {
+            msg += "* " + name + "\n";
+        }
+        ShowAlertWithOK(msg);
+    }
+}
 
 extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_context, int argc, char** argv) {
     try {
         printf("ChonkyStation3 external_main: Started\n");
-
+        
         // Make the GL context current on this thread.
         if (SDL_GL_MakeCurrent(host_window, host_context) != 0) {
             printf("external_main: SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
             return -1;
         }
-
+        
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
             Helpers::panic("OpenGL init failed");
         }
         printf("external_main: GL context is now current\n");
+        printf("external_main: Calling Prebootchecks\n");
+        
 
+        // Process file path if provided will probably never be used again in UWP.
         std::filesystem::path file = "";
         std::filesystem::path localStatePath = "";
-
         if (argc >= 2) {
             file = argv[1];
             printf("external_main: File provided: %s\n", file.generic_string().c_str());
@@ -50,20 +263,28 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         if (argc >= 3) {
             localStatePath = argv[2];
             printf("external_main: Local state path provided: %s\n", localStatePath.generic_string().c_str());
-
+        
             std::string envVarName = "CHONKYSTATION3_LOCAL_STATE_PATH";
             std::string envVarValue = localStatePath.generic_string();
+        
+        #ifdef _WIN32
             if (_putenv_s(envVarName.c_str(), envVarValue.c_str()) != 0) {
                 printf("external_main: Failed to set environment variable %s\n", envVarName.c_str());
             } else {
                 printf("external_main: Environment variable %s set to %s\n", envVarName.c_str(), envVarValue.c_str());
             }
-
-
+        #else
+            if (setenv(envVarName.c_str(), envVarValue.c_str(), 1) != 0) {
+                printf("external_main: Failed to set environment variable %s\n", envVarName.c_str());
+            } else {
+                printf("external_main: Environment variable %s set to %s\n", envVarName.c_str(), envVarValue.c_str());
+            }
+        #endif
+        
         } else {
             printf("external_main: Local state path not provided as argument.\n");
         }
-
+        PreBootChecks();
 
         PlayStation3* ps3 = new PlayStation3(file);
         if (file.empty()) {
@@ -96,6 +317,7 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         return -1;
     }
 }
+
 #else
 
 int main(int argc, char** argv) {

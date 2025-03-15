@@ -1,4 +1,85 @@
 #include "PlayStation3.hpp"
+#ifdef __XBOX_BUILD
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include <imgui.h>
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
+
+static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games) 
+{
+    SDL_Window*   currentWindow  = SDL_GL_GetCurrentWindow();
+    SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL; 
+    ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
+    ImGui_ImplOpenGL3_Init("#version 410");
+
+    int selected = 0;
+    bool selectionMade = false;
+
+    while (!selectionMade) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT) {
+                exit(0);
+            }
+            if (event.type == SDL_CONTROLLERBUTTONDOWN) {
+                if (event.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_UP && selected > 0)
+                    selected--;
+                else if (event.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_DOWN &&
+                         selected < static_cast<int>(games.size()) - 1)
+                    selected++;
+                else if (event.cbutton.button == SDL_CONTROLLER_BUTTON_A)
+                    selectionMade = true;
+            }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_UP && selected > 0)
+                    selected--;
+                else if (event.key.keysym.sym == SDLK_DOWN &&
+                         selected < static_cast<int>(games.size()) - 1)
+                    selected++;
+                else if (event.key.keysym.sym == SDLK_RETURN)
+                    selectionMade = true;
+            }
+        }
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        int width, height;
+        SDL_GetWindowSize(currentWindow, &width, &height);
+        ImGui::SetNextWindowPos(ImVec2(width * 0.5f, height * 0.5f), 
+                                ImGuiCond_Always, 
+                                ImVec2(0.5f, 0.5f)); 
+        ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_Always);
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+        ImGui::Begin("Select Game", nullptr, flags);
+        for (int i = 0; i < static_cast<int>(games.size()); i++) {
+            std::string label = std::to_string(i) + ": " + games[i].title 
+                                + " (ID: " + games[i].id + ")";
+            if (ImGui::Selectable(label.c_str(), selected == i))
+                selected = i;
+        }
+        ImGui::End();
+        ImGui::Render();
+        SDL_GL_MakeCurrent(currentWindow, currentContext);
+        glViewport(0, 0, width, height);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        SDL_GL_SwapWindow(currentWindow);
+        SDL_Delay(16);
+    }
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+    return selected;
+}
+#endif
 
 
 PlayStation3::PlayStation3(const fs::path& executable) : elf_parser(executable), interpreter(mem, this), spu_interpreter(this), rsx(this), syscall(this), module_manager(this), thread_manager(this), spu_thread_manager(this), prx_manager(this), fs(this), lv2_obj(this, &handle_manager) {
@@ -69,8 +150,7 @@ void PlayStation3::gameSelector() {
     // Ask the user what game to run
     int idx;
     #ifdef __XBOX_BUILD
-    // TODO: Xbox doesn't support std::cin at least not to my knwoledge this is used TEMPORARILY until i finish adding the XMB UI
-    idx = 0;
+    idx = ImGuiGameSelector(game_loader.games);
     #else
     printf("Enter game to run (index): ");
     std::cin >> idx;

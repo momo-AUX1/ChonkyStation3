@@ -56,7 +56,16 @@ target_include_directories(ChonkyStation3 PUBLIC Dependencies/tinyfiledialogs)
 
 if (ENABLE_XBOX_BUILD)
     target_sources(ChonkyStation3 PRIVATE
-        Dependencies/imgui/backends/imgui_impl_sdl.cpp
+        # Core ImGui sources
+        Dependencies/imgui/imgui.cpp
+        Dependencies/imgui/imgui_draw.cpp
+        Dependencies/imgui/imgui_widgets.cpp
+        Dependencies/imgui/imgui_tables.cpp
+        # optional
+        Dependencies/imgui/imgui_demo.cpp
+
+        # Backends
+        Dependencies/imgui/backends/imgui_impl_sdl2.cpp
         Dependencies/imgui/backends/imgui_impl_opengl3.cpp
     )
     
@@ -70,7 +79,7 @@ if (NOT ENABLE_XBOX_BUILD)
     target_link_libraries(ChonkyStation3 PUBLIC glad SDL2-static xxHash::xxhash)
     #for desktop proceed as normal
 else()
-    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash imgui)
+    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash)
     #for uwp we use dynamic SDL2 
 endif()
 
