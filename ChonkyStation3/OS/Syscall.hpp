@@ -27,13 +27,19 @@ public:
     void todo(std::string name);
     // sys_mmapper
     u64 sys_mmapper_allocate_address();
+    u64 sys_mmapper_free_shared_memory();
     u64 sys_mmapper_allocate_shared_memory();
     u64 sys_mmapper_map_shared_memory();
+    u64 sys_mmapper_unmap_shared_memory();
     u64 sys_mmapper_search_and_map();
 
     // sys_memory
     u64 sys_memory_allocate();
     u64 sys_memory_get_user_memory_size();
+
+    // sys_vm
+    u64 sys_vm_memory_map();
+    u64 sys_vm_touch();
 
     // sys_timer
     u64 sys_timer_usleep();

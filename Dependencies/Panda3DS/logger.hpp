@@ -38,7 +38,7 @@ public:
 #define true false
 #else
 //#define true false
-#define false true
+//#define false true
 #endif
 
 // Modules
@@ -74,6 +74,7 @@ static Logger sys_prx           = Logger<true> ("[Syscall][sys_prx       ] ");
 static Logger sys_cond          = Logger<true> ("[Syscall][sys_cond      ] ");
 static Logger sys_mutex         = Logger<true> ("[Syscall][sys_mutex     ] ");
 static Logger sys_event         = Logger<true> ("[Syscall][sys_event     ] ");
+static Logger sys_vm            = Logger<true> ("[Syscall][sys_vm        ] ");
 static Logger sys_memory        = Logger<true> ("[Syscall][sys_memory    ] ");
 static Logger sys_mmapper       = Logger<true> ("[Syscall][sys_mmapper   ] ");
 static Logger sys_timer         = Logger<false>("[Syscall][sys_timer     ] ");
@@ -81,7 +82,7 @@ static Logger misc_sc           = Logger<true> ("[Syscall][Misc          ] ");
 static Logger tty               = Logger<1>    ();
 
 // RSX
-static Logger rsx               = Logger<true> ("[RSX    ][Command       ] ");
+static Logger rsx               = Logger<false>("[RSX    ][Command       ] ");
 static Logger vertex_shader     = Logger<true> ("[Shader ][Vertex        ] ");
 static Logger fragment_shader   = Logger<true> ("[Shader ][Fragment      ] ");
 static Logger rsx_cache         = Logger<true> ("[RSX    ][Cache         ] ");

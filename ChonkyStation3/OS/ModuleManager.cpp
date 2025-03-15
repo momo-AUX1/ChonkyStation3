@@ -105,6 +105,7 @@ void ModuleManager::init() {
         { 0x626e8518, { "cellGcmMapEaIoAddressWithFlags",                   std::bind(&CellGcmSys::cellGcmMapEaIoAddressWithFlags, &cellGcmSys) }},
         { 0x63441cb4, { "cellGcmMapEaIoAddress",                            std::bind(&CellGcmSys::cellGcmMapEaIoAddress, &cellGcmSys) }},
         { 0x72a577ce, { "cellGcmGetFlipStatus",                             std::bind(&CellGcmSys::cellGcmGetFlipStatus, &cellGcmSys) }},
+        { 0x8572bce2, { "cellGcmGetReportDataAddressLocation",              std::bind(&CellGcmSys::cellGcmGetReportDataAddressLocation, &cellGcmSys) }},
         { 0x983fb9aa, { "cellGcmSetWaitFlip",                               std::bind(&CellGcmSys::cellGcmSetWaitFlip, &cellGcmSys) }},
         { 0x9dc04436, { "cellGcmBindZcull",                                 std::bind(&CellGcmSys::cellGcmBindZcull, &cellGcmSys) }},
         { 0xa114ec67, { "cellGcmMapMainMemory",                             std::bind(&CellGcmSys::cellGcmMapMainMemory, &cellGcmSys) }},
@@ -140,6 +141,7 @@ void ModuleManager::init() {
         { 0x6cfd856f, { "cellSysutilGetBgmPlaybackStatus2",                 std::bind(&ModuleManager::stub, this) }},
         { 0x938013a0, { "cellSysutilGetSystemParamString",                  std::bind(&CellSysutil::cellSysutilGetSystemParamString, &cellSysutil) }},
         { 0x9d98afa0, { "cellSysutilRegisterCallback",                      std::bind(&CellSysutil::cellSysutilRegisterCallback, &cellSysutil) }},
+        { 0xcfdd8e87, { "cellSysutilDisableBgmPlayback",                    std::bind(&ModuleManager::stub, this) }},
 
         { 0x112a5ee9, { "cellSysmoduleUnloadModule",                        std::bind(&CellSysmodule::cellSysmoduleUnloadModule, &cellSysmodule) }},
         { 0x32267a31, { "cellSysmoduleLoadModule",                          std::bind(&CellSysmodule::cellSysmoduleLoadModule, &cellSysmodule) }},
@@ -152,7 +154,7 @@ void ModuleManager::init() {
         { 0x129922a0, { "cellRescResetFlipStatus",                          std::bind(&CellResc::cellRescResetFlipStatus, &cellResc) }},
         { 0x1dd3c4cd, { "cellRescGetRegisterCount",                         std::bind(&ModuleManager::stub, this) }},
         { 0x23134710, { "cellRescSetDisplayMode",                           std::bind(&CellResc::cellRescSetDisplayMode, &cellResc) }},
-        { 0x25c107e6, { "cellRescSetConvertAndFlip",                        std::bind(&CellResc::cellRescSetConvertAndFlip, &cellResc) }},
+        { 0x25c107e6, { "cellRescSetConvertAndFlip",                        std::bind(&CellResc::cellRescSetConvertAndFlip, &cellResc), true }},
         { 0x516ee89e, { "cellRescInit",                                     std::bind(&CellResc::cellRescInit, &cellResc) }},
         { 0x5a338cdb, { "cellRescGetBufferSize",                            std::bind(&CellResc::cellRescGetBufferSize, &cellResc) }},
         { 0x6cd0f95f, { "cellRescSetSrc",                                   std::bind(&ModuleManager::stub, this) }},
@@ -356,5 +358,8 @@ void ModuleManager::init() {
         { 0x05893e7c, { "cellUserTraceRegister",                            std::bind(&ModuleManager::stub, this) } },
         
         { 0x2b761140, { "cellUserInfoGetStat",                              std::bind(&ModuleManager::stub, this) } },
+        
+        { 0x55870804, { "_cellFiberPpuInitialize",                          std::bind(&ModuleManager::stub, this) } },
+        { 0x9e25c72d, { "_cellFiberPpuSchedulerAttributeInitialize",        std::bind(&ModuleManager::stub, this) } },
     };
 }

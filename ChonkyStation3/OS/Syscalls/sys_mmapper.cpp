@@ -21,6 +21,19 @@ u64 Syscall::sys_mmapper_allocate_address() {
     return Result::CELL_OK;
 }
 
+u64 Syscall::sys_mmapper_free_shared_memory() {
+    const u32 handle = ARG0;
+    log_sys_mmapper("sys_mmapper_free_shared_memory(handle: %d)\n", handle);
+
+    Helpers::debugAssert(handle, "sys_mmapper_free_shared_memory: handle is 0\n");
+    
+    auto block = ps3->mem.findMapEntryWithHandle(handle);
+    Helpers::debugAssert(block.first, "sys_mmapper_free_shared_memory: tried to free unmapped memory\n");
+    ps3->mem.free(block.second);
+
+    return Result::CELL_OK;
+}
+
 u64 Syscall::sys_mmapper_allocate_shared_memory() {
     const u64 ipc_key = ARG0;
     const u64 size = ARG1;
@@ -40,10 +53,10 @@ u64 Syscall::sys_mmapper_map_shared_memory() {
     const u32 addr = ARG0;
     const u32 handle = ARG1;
     const u64 flags = ARG2;
-    log_sys_mmapper("sys_mmapper_map_shared_memory(addr: 0x%08x, handle: %d, flags: 0x%016llx)");
+    log_sys_mmapper("sys_mmapper_map_shared_memory(addr: 0x%08x, handle: %d, flags: 0x%016llx)", addr, handle, flags);
 
     auto block = ps3->mem.findBlockWithHandle(handle);
-    Helpers::debugAssert(block.first, "sysMMapperMapMemory: unknown handle\n");
+    Helpers::debugAssert(handle && block.first, "sysMMapperMapMemory: unknown handle\n");
     if (ps3->mem.isMapped(addr).first) {
         log_sys_mmapperNoPrefix(" [already mapped, freeing block]\n");
         // If this area was already mapped, we free the new block. Should be OK. If things break try removing this.
@@ -51,8 +64,25 @@ u64 Syscall::sys_mmapper_map_shared_memory() {
     }
     else {
         log_sys_mmapperNoPrefix("\n");
-        ps3->mem.mmap(addr, block.second->start, block.second->size);
+        auto entry = ps3->mem.mmap(addr, block.second->start, block.second->size);
+        // Assign the same handle to the map entry (will be checked by sys_mmapper_free_shared_memory)
+        entry->handle = handle;
     }
+
+    return Result::CELL_OK;
+}
+
+u64 Syscall::sys_mmapper_unmap_shared_memory() {
+    // TODO: Right now I just free (and unmap) the memory when the free memory function is called
+    const u32 addr = ARG0;
+    const u32 handle_ptr = ARG1;
+    log_sys_mmapper("sys_mmapper_unmap_shared_memory(addr: 0x%08x, handle_ptr: 0x%08x)\n", addr, handle_ptr);
+
+    auto info = ps3->mem.isMapped(addr);
+    Helpers::debugAssert(info.first, "sys_mmapper_unmap_shared_memory: addr is unmapped\n");
+
+    // Get handle of the physical block
+    ps3->mem.write<u32>(handle_ptr, info.second->handle);
 
     return Result::CELL_OK;
 }
@@ -64,11 +94,13 @@ u64 Syscall::sys_mmapper_search_and_map() {
     const u32 addr_ptr = ARG3;
     log_sys_mmapper("sys_mmapper_search_and_map(start_addr: 0x%08x, handle: 0x%08x, flags: 0x%016llx, addr_ptr: 0x%08x)\n", start_addr, handle, flags, addr_ptr);
     auto block = ps3->mem.ram.findBlockWithHandle(handle);
-    Helpers::debugAssert(block.first, "sys_mmapper_search_and_map: unknown handle\n");
+    Helpers::debugAssert(handle && block.first, "sys_mmapper_search_and_map: unknown handle\n");
 
     // Find area to map block to
     u64 vaddr = ps3->mem.findNextAllocatableVaddr(block.second->size, start_addr);
     auto entry = ps3->mem.mmap(vaddr, block.second->start, block.second->size);
+    // Assign the same handle to the map entry
+    entry->handle = handle;
 
     ps3->mem.write<u32>(addr_ptr, entry->vaddr);
 

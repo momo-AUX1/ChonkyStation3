@@ -36,6 +36,7 @@ public:
     u32 fetch32();
     u32 offsetAndLocationToAddress(u32 offset, u8 location);
 
+    bool hanged = false;
     bool flipped = false;
 
     OpenGL::Vector<float, 4> clear_color;

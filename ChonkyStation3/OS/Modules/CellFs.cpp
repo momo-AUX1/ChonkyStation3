@@ -38,7 +38,8 @@ u64 CellFs::cellFsRead() {
     log("cellFsRead(file_id: %d, buf: 0x%08x, size: %lld, bytes_read_ptr: 0x%08x)\n", file_id, buf, size, bytes_read_ptr);
 
     const u64 bytes_read = ps3->fs.read(file_id, ps3->mem.getPtr(buf), size);
-    ps3->mem.write<u64>(bytes_read_ptr, bytes_read);
+    if (bytes_read_ptr) // Note: this behavior is different from sys_fs_read, which returns CELL_EFAULT in case bytes_read_ptr is null.
+        ps3->mem.write<u64>(bytes_read_ptr, bytes_read);
 
     return Result::CELL_OK;
 }

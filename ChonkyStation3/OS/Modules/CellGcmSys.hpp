@@ -77,6 +77,7 @@ public:
     u32 mapping_sizes[4096] = {0};
     u32 label_addr = 0;
     u32 buffer_info_addr = 0;
+    u32 reports_addr = 0;
     u32 flip = 0;
     u32 flip_callback = 0;
     u32 vblank_handler = 0;
@@ -98,6 +99,7 @@ public:
     u64 cellGcmMapEaIoAddressWithFlags();
     u64 cellGcmMapEaIoAddress();
     u64 cellGcmGetFlipStatus();
+    u64 cellGcmGetReportDataAddressLocation();
     u64 cellGcmSetWaitFlip();
     u64 cellGcmBindZcull();
     u64 cellGcmMapMainMemory();

@@ -10,7 +10,7 @@ bool Lv2SPUThreadGroup::start(PlayStation3* ps3) {
     // TODO: Check if all the threads in this group are ready
     for (auto& i : threads) {
         ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Running;
-        //if (ps3->spu_thread_manager.getThreadByID(i)->name != "highCellSpursKernel5") ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Terminated;
+        if (ps3->spu_thread_manager.getThreadByID(i)->name != "highCellSpursKernel5") ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Terminated;
     }
 
     ps3->spu_thread_manager.reschedule();

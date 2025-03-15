@@ -63,6 +63,10 @@ u64 CellGcmSys::cellGcmInitBody() {
     buffer_info_addr = ps3->mem.alloc(sizeof(CellGcmDisplayInfo) * 8)->vaddr;
     std::memset(ps3->mem.getPtr(buffer_info_addr), 0, sizeof(CellGcmDisplayInfo) * 8);
     
+    // Empty dummy reports area
+    reports_addr = ps3->mem.alloc(1_MB)->vaddr;
+    std::memset(ps3->mem.getPtr(reports_addr), 0, 1_MB);
+
     // Memory watchpoint to tell the RSX to check if there are commands to run when put is written
     ps3->mem.watchpoints_w[ctrl_addr] = std::bind(&RSX::runCommandList, &ps3->rsx, std::placeholders::_1);
     ps3->mem.markAsSlowMem(ctrl_addr >> PAGE_SHIFT, false, true);   // Only need to make writes take the slow path
@@ -139,7 +143,7 @@ bool CellGcmSys::isIoOffsMapped(u32 io) {
 u64 CellGcmSys::_cellGcmSetFlipCommand() {
     const u32 context_addr = ARG0;
     const u32 buf_id = ARG1;
-    log("_cellGcmSetFlipCommand(ctx_addr: 0x%08x, buf_id: %d)\n", context_addr, buf_id);
+    //log("_cellGcmSetFlipCommand(ctx_addr: 0x%08x, buf_id: %d)\n", context_addr, buf_id);
 
     CellGcmContextData* context = (CellGcmContextData*)ps3->mem.getPtr(context_addr);
     if (ctx->current + 8 >= ctx->end) cellGcmCallback();
@@ -153,7 +157,7 @@ u64 CellGcmSys::_cellGcmSetFlipCommand() {
 u64 CellGcmSys::cellGcmAddressToOffset() {
     const u32 addr = ARG0;
     const u32 offs_ptr = ARG1;
-    log("cellGcmAddressToOffset(addr: 0x%08x, offs_ptr: 0x%08x)", addr, offs_ptr);
+    //log("cellGcmAddressToOffset(addr: 0x%08x, offs_ptr: 0x%08x)", addr, offs_ptr);
 
     u32 offs = 0;
     // Check if the address is in RSX memory
@@ -173,7 +177,7 @@ u64 CellGcmSys::cellGcmAddressToOffset() {
         }
     }
 
-    logNoPrefix(" [offs: 0x%08x]\n", offs);
+    //logNoPrefix(" [offs: 0x%08x]\n", offs);
     ps3->mem.write<u32>(offs_ptr, offs);
     
     return Result::CELL_OK;
@@ -245,8 +249,16 @@ u64 CellGcmSys::cellGcmMapEaIoAddress() {
 
 u64 CellGcmSys::cellGcmGetFlipStatus() {
     log("cellGcmGetFlipStatus()\n");
-
     return flip;
+}
+
+u64 CellGcmSys::cellGcmGetReportDataAddressLocation() {
+    const u32 idx = ARG0;
+    const u32 loc = ARG1;
+    // TODO: We just use a random, empty location for now... will fix when I implement reports
+    log("cellGcmGetReportDataAddressLocation(idx: %d, loc: %d)\n", idx, loc);
+
+    return reports_addr;
 }
 
 u64 CellGcmSys::cellGcmSetWaitFlip() {
@@ -333,7 +345,7 @@ u64 CellGcmSys::cellGcmSetDisplayBuffer() {
 }
 
 u64 CellGcmSys::cellGcmGetControlRegister() {
-    log("cellGcmGetControlRegister()\n");
+    //log("cellGcmGetControlRegister()\n");
     return ctrl_addr;
 }
 

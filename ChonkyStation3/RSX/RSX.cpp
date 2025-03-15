@@ -351,6 +351,11 @@ void RSX::runCommandList(u64 put_addr) {
     log("Executing commands\n");
     log("get: 0x%08x, put: 0x%08x\n", (u32)gcm.ctrl->get, (u32)gcm.ctrl->put);
 
+    // Used to detect hangs
+    hanged = false;
+    u32 last_jump_addr = 0;
+    u32 last_jump_dst = 0;
+
     // Execute while get != put
     // We increment get as we fetch data from the FIFO
     while (gcm.ctrl->get != gcm.ctrl->put) {
@@ -360,16 +365,41 @@ void RSX::runCommandList(u64 put_addr) {
 
         if (cmd & 0xa0030003) {
             if ((cmd & 0xe0000003) == 0x20000000) { // jump
+                const u32 old_get = gcm.ctrl->get - 4;
                 gcm.ctrl->get = cmd & 0x1ffffffc;
+
+                // Detect hangs
+                if (gcm.ctrl->get == last_jump_dst && old_get == last_jump_addr) {
+                    log("RSX hanged, aborting...\n");
+                    hanged = true;
+                    exit(0);
+                    break;
+                }
+                last_jump_addr = old_get;
+                last_jump_dst = gcm.ctrl->get;
                 continue;
             }
+
             if ((cmd & 0xe0000003) == 0x00000001) { // jump
+                const u32 old_get = gcm.ctrl->get - 4;
                 gcm.ctrl->get = cmd & 0xfffffffc;
+
+                // Detect hangs
+                if (gcm.ctrl->get == last_jump_dst && old_get == last_jump_addr) {
+                    log("RSX hanged, aborting...\n");
+                    hanged = true;
+                    exit(0);
+                    break;
+                }
+                last_jump_addr = old_get;
+                last_jump_dst = gcm.ctrl->get;
                 continue;
             }
+
             if ((cmd & 0x00000003) == 0x00000002) { // call
                 Helpers::panic("rsx: call\n");
             }
+
             if ((cmd & 0xffff0003) == 0x00020000) {
                 Helpers::panic("rsx: return\n");
             }

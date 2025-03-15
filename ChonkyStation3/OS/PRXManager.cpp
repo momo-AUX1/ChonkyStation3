@@ -5,7 +5,7 @@
 
 PRXManager::PRXManager(PlayStation3* ps3) : ps3(ps3) {
     lle_modules = {
-        //{ "cellResc",           "libresc.prx" },
+        { "cellResc",           "libresc.prx" },
         //{ "cellPngDec",         "libpngdec.prx" },
         //{ "cellFont",           "libfont.prx" },
         //{ "cellFontFT",         "libfontFT.prx" },
@@ -15,6 +15,7 @@ PRXManager::PRXManager(PlayStation3* ps3) : ps3(ps3) {
         { "cellSpurs",          "libsre.prx" },
         { "cellKey2char",       "libkey2char.prx" },
         { "cellL10n",           "libl10n.prx" },
+        { "cellFiber",          "libfiber.prx" },
     };
 }
 

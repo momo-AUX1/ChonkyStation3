@@ -130,11 +130,15 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 251:   ps3->ppu->state.gprs[3] = sys_spu_thread_group_connect_event_all_threads();     break;
     case 253:   todo("sys_spu_thread_group_syscall_253()");                                     break;
     case 254:   todo("sys_spu_thread_group_log()");                                             break;
+    case 300:   ps3->ppu->state.gprs[3] = sys_vm_memory_map();                                  break;
+    case 306:   ps3->ppu->state.gprs[3] = sys_vm_touch();                                       break;
     case 330:   ps3->ppu->state.gprs[3] = sys_mmapper_allocate_address();                       break;
     case 324:   todo("sys_memory_container_create()");                                          break;
+    case 329:   ps3->ppu->state.gprs[3] = sys_mmapper_free_shared_memory();                     break;
     case 331:   todo("sys_mmapper_free_address()");                                             break;
     case 332:   ps3->ppu->state.gprs[3] = sys_mmapper_allocate_shared_memory();                 break;
     case 334:   ps3->ppu->state.gprs[3] = sys_mmapper_map_shared_memory();                      break;
+    case 335:   ps3->ppu->state.gprs[3] = sys_mmapper_unmap_shared_memory();                    break;
     case 337:   ps3->ppu->state.gprs[3] = sys_mmapper_search_and_map();                         break;
     case 341:   todo("sys_memory_container_create()");                                          break;
     case 348:   ps3->ppu->state.gprs[3] = sys_memory_allocate();                                break;
@@ -176,7 +180,11 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 630:   todo("sys_gpio_set()");                                                 break;
     case 631:   todo("sys_gpio_get()");                                                 break;
     case 801:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsOpen();      break;
-    case 802:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsRead();      break;
+    case 802: {
+        if (!ARG3) Helpers::panic("sys_fs_read: bytes_read_ptr is null\n");
+        ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsRead();
+        break;
+    }
     case 804:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsClose();     break;
     case 805:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsOpendir();   break;
     case 806:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsReaddir();   break;
