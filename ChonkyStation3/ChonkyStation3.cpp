@@ -5,11 +5,6 @@
 #include <windows.h>
 #endif
 
-#ifdef __XBOX_BUILD
-#include <cstdio>
-#include <fstream>
-#endif
-
 #ifdef _WIN32
     #define EXPORT __declspec(dllexport)
 #else
@@ -24,47 +19,51 @@
 #endif
 
 #ifdef __XBOX_BUILD
-
-void redirect_output(const char* filename) {
-    static std::ofstream log_file(filename, std::ios::trunc);
-
-    if (!log_file) {
-        std::cerr << "Failed to open log file!" << std::endl;
-        return;
-    }
-
-    FILE* fp = freopen(filename, "w", stdout);
-    if (!fp) {
-        std::cerr << "Failed to redirect stdout!" << std::endl;
-    }
-
-    std::cout.rdbuf(log_file.rdbuf());
-}
+#include <cstdlib> 
+#include <stdexcept>
 
 extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_context, int argc, char** argv) {
     try {
-        redirect_output("E:/PS3_LOGS.txt");
         printf("ChonkyStation3 external_main: Started\n");
-        
+
         // Make the GL context current on this thread.
         if (SDL_GL_MakeCurrent(host_window, host_context) != 0) {
             printf("external_main: SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
             return -1;
         }
-        
+
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
             Helpers::panic("OpenGL init failed");
         }
         printf("external_main: GL context is now current\n");
 
-        // Process file path if provided will probably never be used again in UWP.
         std::filesystem::path file = "";
+        std::filesystem::path localStatePath = "";
+
         if (argc >= 2) {
             file = argv[1];
             printf("external_main: File provided: %s\n", file.generic_string().c_str());
         } else {
             printf("external_main: No file provided, calling gameSelector\n");
         }
+
+        if (argc >= 3) {
+            localStatePath = argv[2];
+            printf("external_main: Local state path provided: %s\n", localStatePath.generic_string().c_str());
+
+            std::string envVarName = "CHONKYSTATION3_LOCAL_STATE_PATH";
+            std::string envVarValue = localStatePath.generic_string();
+            if (_putenv_s(envVarName.c_str(), envVarValue.c_str()) != 0) {
+                printf("external_main: Failed to set environment variable %s\n", envVarName.c_str());
+            } else {
+                printf("external_main: Environment variable %s set to %s\n", envVarName.c_str(), envVarValue.c_str());
+            }
+
+
+        } else {
+            printf("external_main: Local state path not provided as argument.\n");
+        }
+
 
         PlayStation3* ps3 = new PlayStation3(file);
         if (file.empty()) {
@@ -97,7 +96,6 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         return -1;
     }
 }
-
 #else
 
 int main(int argc, char** argv) {

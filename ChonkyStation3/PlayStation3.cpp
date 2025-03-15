@@ -8,8 +8,16 @@ PlayStation3::PlayStation3(const fs::path& executable) : elf_parser(executable),
     module_manager.init();
 
     #ifdef __XBOX_BUILD
-    // TODO: Implment WinRT apis via DLL or something to make the filesystem in local state
-    std::string basePath = "E:/";
+    std::string basePath;
+    const char* localStatePathEnv = std::getenv("CHONKYSTATION3_LOCAL_STATE_PATH");
+
+    if (localStatePathEnv != nullptr) {
+        basePath = localStatePathEnv;
+        printf("Filesystem: Using local state path from environment variable: %s\n", basePath.c_str());
+    } else {
+        basePath = "E:/";
+        printf("Filesystem: Environment variable not found, defaulting to basePath: %s\n", basePath.c_str());
+    }
     std::filesystem::path devFlashFolder = std::filesystem::path(basePath) / "dev_flash";
     std::filesystem::path devHdd0Folder  = std::filesystem::path(basePath) / "dev_hdd0";
     std::filesystem::path devHdd1Folder  = std::filesystem::path(basePath) / "dev_hdd1";
