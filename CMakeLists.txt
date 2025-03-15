@@ -54,11 +54,23 @@ target_include_directories(ChonkyStation3 PUBLIC Dependencies/xxHash)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/lodepng)
 target_include_directories(ChonkyStation3 PUBLIC Dependencies/tinyfiledialogs)
 
+if (ENABLE_XBOX_BUILD)
+    target_sources(ChonkyStation3 PRIVATE
+        Dependencies/imgui/backends/imgui_impl_sdl.cpp
+        Dependencies/imgui/backends/imgui_impl_opengl3.cpp
+    )
+    
+    target_include_directories(ChonkyStation3 PUBLIC
+        Dependencies/imgui
+        Dependencies/imgui/backends
+    )
+endif()
+
 if (NOT ENABLE_XBOX_BUILD)
     target_link_libraries(ChonkyStation3 PUBLIC glad SDL2-static xxHash::xxhash)
     #for desktop proceed as normal
 else()
-    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash)
+    target_link_libraries(ChonkyStation3 PUBLIC glad SDL2 xxHash::xxhash imgui)
     #for uwp we use dynamic SDL2 
 endif()
 
