@@ -189,7 +189,11 @@ static std::string ShowBootWindow(SDL_Window* host_window, SDL_GLContext host_co
 
         ImGui::Render();
         SDL_GL_MakeCurrent(host_window, host_context);
-        glViewport(0, 0, w, h);
+        // viewport 
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(host_window, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        //
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -244,7 +248,11 @@ static void ShowCriticalAlertAndFreeze(const std::string& message)
 
         ImGui::Render();
         SDL_GL_MakeCurrent(currentWindow, currentContext);
-        glViewport(0, 0, w, h);
+        // viewport 
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(currentWindow, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        //
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -301,7 +309,11 @@ static void ShowAlertWithOK(const std::string& message)
 
         ImGui::Render();
         SDL_GL_MakeCurrent(currentWindow, currentContext);
-        glViewport(0, 0, w, h);
+        // viewport 
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(currentWindow, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        //
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

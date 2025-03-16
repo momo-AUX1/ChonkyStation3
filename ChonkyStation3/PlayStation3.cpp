@@ -69,7 +69,11 @@ static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games
         ImGui::End();
         ImGui::Render();
         SDL_GL_MakeCurrent(currentWindow, currentContext);
-        glViewport(0, 0, width, height);
+        // viewport 
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(currentWindow, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        //
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
