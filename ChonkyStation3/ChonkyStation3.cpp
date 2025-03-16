@@ -35,6 +35,175 @@
 
 #ifdef __XBOX_BUILD
 
+static std::string ShowBootWindow(SDL_Window* host_window, SDL_GLContext host_context)
+{
+   
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  
+    io.IniFilename = NULL;
+    ImGui_ImplSDL2_InitForOpenGL(host_window, host_context);
+    ImGui_ImplOpenGL3_Init("#version 410");
+
+    std::string chosenElf;
+    enum class BootMenuState { MAIN, CHOOSE_ELF, ERROR_NO_USB };
+    BootMenuState menuState = BootMenuState::MAIN;
+
+    std::vector<std::string> elfFiles;
+
+    bool done = false;
+    while (!done)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT)
+            {
+                done = true;
+                break;
+            }
+
+            if (event.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                if (event.cbutton.button == SDL_CONTROLLER_BUTTON_B ||
+                    event.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+                {
+                    done = true;
+                    break;
+                }
+            }
+
+            if (event.type == SDL_KEYDOWN)
+            {
+                
+                if (event.key.keysym.sym == SDLK_ESCAPE)
+                {
+                    done = true;
+                    break;
+                }
+            }
+        }
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        int w, h;
+        SDL_GetWindowSize(host_window, &w, &h);
+        ImGui::SetNextWindowPos(ImVec2(float(w) * 0.5f, float(h) * 0.5f), 
+                                ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_Always);
+        ImGui::Begin("Boot Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        float fullWindowHeight = ImGui::GetWindowSize().y;
+        ImGui::Dummy(ImVec2(0.0f, fullWindowHeight * 0.15f)); 
+
+        if (menuState == BootMenuState::MAIN)
+        {
+            const char* titleText = "ChonkyStation3";
+            ImVec2 textSize = ImGui::CalcTextSize(titleText);
+            float textPosX = (ImGui::GetWindowSize().x - textSize.x) * 0.5f;
+            ImGui::SetCursorPosX(textPosX);
+            ImGui::SetWindowFontScale(1.5f);
+            ImGui::TextUnformatted(titleText);
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::Dummy(ImVec2(0.0f, 40.0f)); 
+
+            float windowWidth = ImGui::GetContentRegionAvail().x;
+            float buttonWidth = 120.0f;
+            float spacing = 20.0f;
+            float totalWidth = (buttonWidth * 2) + spacing;
+            float offsetX = (windowWidth - totalWidth) * 0.5f;
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+            if (ImGui::Button("Start", ImVec2(buttonWidth, 0)))
+            {
+                done = true; 
+            }
+            ImGui::SameLine(0, spacing);
+
+            if (ImGui::Button("Choose ELF", ImVec2(buttonWidth, 0)))
+            {
+                std::filesystem::path usbPath("E:/");
+                if (!std::filesystem::exists(usbPath) || !std::filesystem::is_directory(usbPath))
+                {
+                    menuState = BootMenuState::ERROR_NO_USB;
+                }
+                else
+                {
+                    elfFiles.clear();
+                    for (auto& entry : std::filesystem::directory_iterator(usbPath))
+                    {
+                        if (!entry.is_regular_file()) 
+                            continue;
+                        if (entry.path().extension().string() == ".elf")
+                        {
+                            elfFiles.push_back(entry.path().string());
+                        }
+                    }
+                    if (elfFiles.empty())
+                    {
+                        menuState = BootMenuState::ERROR_NO_USB;
+                    }
+                    else
+                    {
+                        menuState = BootMenuState::CHOOSE_ELF;
+                    }
+                }
+            }
+        }
+        else if (menuState == BootMenuState::CHOOSE_ELF)
+        {
+            ImGui::TextUnformatted("Select an ELF from E:/");
+            ImGui::Separator();
+
+            ImGui::BeginChild("elf_list", ImVec2(0, 250), true);
+            for (size_t i = 0; i < elfFiles.size(); i++)
+            {
+                if (ImGui::Selectable(elfFiles[i].c_str()))
+                {
+                    chosenElf = elfFiles[i];
+                    done = true;
+                }
+            }
+            ImGui::EndChild();
+
+            if (ImGui::Button("Back"))
+            {
+                menuState = BootMenuState::MAIN;
+            }
+        }
+        else if (menuState == BootMenuState::ERROR_NO_USB)
+        {
+            ImGui::TextWrapped("Raw single ELF loading requires a USB drive in E:/ "
+                               "containing at least one .elf file.\n");
+            if (ImGui::Button("Back"))
+            {
+                menuState = BootMenuState::MAIN;
+            }
+        }
+
+        ImGui::End();
+
+        ImGui::Render();
+        SDL_GL_MakeCurrent(host_window, host_context);
+        glViewport(0, 0, w, h);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        SDL_GL_SwapWindow(host_window);
+        SDL_Delay(16);
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+    return chosenElf;
+}
+
 static void ShowCriticalAlertAndFreeze(const std::string& message) 
 {
     SDL_Window* currentWindow  = SDL_GL_GetCurrentWindow();
@@ -42,6 +211,8 @@ static void ShowCriticalAlertAndFreeze(const std::string& message)
 
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; 
     io.IniFilename = NULL;
 
     ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
@@ -89,6 +260,8 @@ static void ShowAlertWithOK(const std::string& message)
 
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; 
     io.IniFilename = NULL; 
 
     ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
@@ -250,7 +423,7 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         printf("external_main: Calling Prebootchecks\n");
         
 
-        // Process file path if provided will probably never be used again in UWP.
+        // Process file path if provided will probably never be used again in UWP (nvm!).
         std::filesystem::path file = "";
         std::filesystem::path localStatePath = "";
         if (argc >= 2) {
@@ -284,6 +457,8 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         } else {
             printf("external_main: Local state path not provided as argument.\n");
         }
+        std::string result = ShowBootWindow(host_window, host_context);
+        file = result;
         PreBootChecks();
 
         PlayStation3* ps3 = new PlayStation3(file);
@@ -311,9 +486,11 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         return 0;
     } catch (const std::exception& e) {
         fprintf(stderr, "Exception caught in external_main: %s\n", e.what());
+        ShowCriticalAlertAndFreeze(std::string("Exception: ") + e.what());
         return -1;
     } catch (...) {
         fprintf(stderr, "Unknown exception caught in external_main.\n");
+        ShowCriticalAlertAndFreeze("Unknown exception caught.\n");
         return -1;
     }
 }

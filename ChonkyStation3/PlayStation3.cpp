@@ -14,6 +14,8 @@ static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = NULL; 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; 
     ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
     ImGui_ImplOpenGL3_Init("#version 410");
 
