@@ -13,7 +13,7 @@ u64 CellRtc::cellRtcGetCurrentClockLocalTime() {
 
     // Convert to local time maybe i should remove the xbox build check from here...
     std::tm local_tm;
-    #if defined(_MSC_VER) || defined(__MINGW32__) //|| defined(__XBOX_BUILD)
+    #if defined(_MSC_VER) || defined(__MINGW32__) 
     localtime_s(&local_tm, &now_time);
     #else
     localtime_r(&now_time, &local_tm);
