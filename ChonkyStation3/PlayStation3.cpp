@@ -5,6 +5,26 @@
 #include <imgui.h>
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+GLuint LoadTextureFromFile(const char* filename) {
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+    if (!data) {
+        printf("Failed to load image: %s\n", filename);
+        return 0;
+    }
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    stbi_image_free(data);
+    return texture;
+}
 
 static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games) 
 {
@@ -18,6 +38,25 @@ static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; 
     ImGui_ImplSDL2_InitForOpenGL(currentWindow, currentContext);
     ImGui_ImplOpenGL3_Init("#version 410");
+    std::vector<GLuint> iconTextures;
+    std::vector<GLuint> bgTextures;
+    iconTextures.reserve(games.size());
+    bgTextures.reserve(games.size());
+    const char* localStatePathEnv = std::getenv("CHONKYSTATION3_LOCAL_STATE_PATH");
+    std::string basePath = localStatePathEnv ? localStatePathEnv : "E:/";
+
+for (const auto& game : games) {
+    std::string guestPath = game.content_path.string();
+    if (!guestPath.empty() && guestPath[0] == '/')
+        guestPath.erase(0, 1);
+
+    std::filesystem::path hostGamePath = std::filesystem::path(basePath) / guestPath;
+    std::string iconPath = (hostGamePath / "ICON0.png").generic_string();
+    std::string bgPath   = (hostGamePath / "PIC1.png").generic_string();
+
+    iconTextures.push_back(LoadTextureFromFile(iconPath.c_str()));
+    bgTextures.push_back(LoadTextureFromFile(bgPath.c_str()));
+}
 
     int selected = 0;
     bool selectionMade = false;
@@ -52,6 +91,9 @@ static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+
+        int hoveredIndex = -1;
+
         int width, height;
         SDL_GetWindowSize(currentWindow, &width, &height);
         ImGui::SetNextWindowPos(ImVec2(width * 0.5f, height * 0.5f), 
@@ -60,26 +102,50 @@ static int ImGuiGameSelector(const std::vector<GameLoader::InstalledGame>& games
         ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_Always);
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
         ImGui::Begin("Select Game", nullptr, flags);
+
         for (int i = 0; i < static_cast<int>(games.size()); i++) {
+            if (iconTextures[i] != 0) {
+                ImGui::Image((ImTextureID)(uintptr_t)iconTextures[i], ImVec2(128, 64));
+                ImGui::SameLine();
+            }
             std::string label = std::to_string(i) + ": " + games[i].title 
                                 + " (ID: " + games[i].id + ")";
             if (ImGui::Selectable(label.c_str(), selected == i))
                 selected = i;
+            if (ImGui::IsItemHovered())
+                hoveredIndex = i;
         }
         ImGui::End();
+
+        if (hoveredIndex != -1 && bgTextures[hoveredIndex] != 0) {
+            ImGui::GetBackgroundDrawList()->AddImage(
+                static_cast<ImTextureID>(static_cast<uintptr_t>(bgTextures[hoveredIndex])),
+                ImVec2(0, 0), 
+                ImVec2(io.DisplaySize.x, io.DisplaySize.y)
+            );
+        }
+
         ImGui::Render();
         SDL_GL_MakeCurrent(currentWindow, currentContext);
-        // viewport 
         int drawableWidth, drawableHeight;
         SDL_GL_GetDrawableSize(currentWindow, &drawableWidth, &drawableHeight);
         glViewport(0, 0, drawableWidth, drawableHeight);
-        //
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(currentWindow);
         SDL_Delay(16);
     }
+
+    for (GLuint tex : iconTextures) {
+        if(tex != 0)
+            glDeleteTextures(1, &tex);
+    }
+    for (GLuint tex : bgTextures) {
+        if(tex != 0)
+            glDeleteTextures(1, &tex);
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();

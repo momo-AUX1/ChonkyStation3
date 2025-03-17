@@ -1,4 +1,9 @@
 #include "GameWindow.hpp"
+#ifdef __XBOX_BUILD
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
+#include <imgui.h>
+#endif
 
 
 static constexpr double MS_PER_FRAME = 1000.0 / 60.0;
@@ -158,12 +163,30 @@ void GameWindow::flipHandler() {
     curr_time = curr_ticks / 1000.0;
 
     std::string title;
+
+
+    #ifdef __XBOX_BUILD
+    static int lastFPS = 0;
+    static bool imguiInitialized = false;
+    if (!imguiInitialized) {
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.IniFilename = nullptr; 
+        ImGui_ImplSDL2_InitForOpenGL(window, SDL_GL_GetCurrentContext());
+        ImGui_ImplOpenGL3_Init("#version 410");
+        imguiInitialized = true;
+    }
+    #endif
+
     if (curr_time - last_time > 1.0) {
         //ppu_usage = ((CPU_FREQ - ps3->skipped_cycles) * 100.0f) / CPU_FREQ;
         ppu_usage = std::min(((ps3->scheduler.time - last_timestamp) * 100.0f) / CPU_FREQ, 100.0f);
         title = std::format("ChonkyStation3 | {} | {} FPS | PPU: {:.2f}%", title_game, frame_count, std::ceil(ppu_usage * 100.0f) / 100.0f);
         SDL_SetWindowTitle(window, title.c_str());
         last_time = curr_time;
+        #ifdef __XBOX_BUILD
+        lastFPS = frame_count; 
+        #endif
         frame_count = 0;
     }
     last_timestamp = ps3->scheduler.time;
@@ -241,6 +264,31 @@ void GameWindow::flipHandler() {
         if (SDL_GameControllerGetAxis(controller, SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 20000)     ps3->pressButton(CELL_PAD_CTRL_L2);
         if (SDL_GameControllerGetAxis(controller, SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 20000)    ps3->pressButton(CELL_PAD_CTRL_R2);
     }
+
+
+
+    #ifdef __XBOX_BUILD
+    if (true) {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        int win_w, win_h;
+        SDL_GetWindowSize(window, &win_w, &win_h);
+        ImGui::SetNextWindowPos(ImVec2(win_w - 10, 10), ImGuiCond_Always, ImVec2(1, 0));
+        ImGui::Begin("FPS Panel", nullptr,
+                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
+        ImGui::Text("FPS: %d", lastFPS);
+        ImGui::End();
+
+        ImGui::Render();
+        int drawableWidth, drawableHeight;
+        SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+        glViewport(0, 0, drawableWidth, drawableHeight);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+    #endif  
 
     SDL_GL_SwapWindow(window);
 }

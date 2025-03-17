@@ -72,6 +72,7 @@ if (ENABLE_XBOX_BUILD)
     target_include_directories(ChonkyStation3 PUBLIC
         Dependencies/imgui
         Dependencies/imgui/backends
+        Dependencies/stb     
     )
 endif()
 
