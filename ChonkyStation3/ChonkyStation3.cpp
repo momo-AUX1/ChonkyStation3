@@ -357,7 +357,6 @@ static void PreBootChecks()
     if (prxCount == 0 || picCount == 0) {
         ShowCriticalAlertAndFreeze(
             "Mismatch in dev_flash/sys/external: Missing either .prx or .pic files.\n"
-            "Application will freeze now."
         );
     }
 
