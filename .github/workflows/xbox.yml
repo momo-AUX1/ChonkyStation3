@@ -1,0 +1,61 @@
+name: Windows build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch submodules
+        run: git submodule update --init --recursive
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_USER_BUILD=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChonkyStation3 
+          path: ./build/Release/libChonkyStation3.dll
+
+  build_xbox:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            base-devel
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-cmake
+
+      - name: Configure and Build Xbox Target with MinGW
+        shell: msys2 {0}
+        run: |
+          pacman -Syu --noconfirm
+          mkdir buildxbox
+          cd buildxbox
+          cmake -G "MinGW Makefiles" -DENABLE_XBOX_BUILD=ON ..
+          mingw32-make
+
+      - name: Upload Xbox Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChonkyStation3_xbox
+          path: ./buildxbox/libChonkyStation3.dll
