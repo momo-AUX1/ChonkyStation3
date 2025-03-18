@@ -299,7 +299,8 @@ bool tmp = false;
 static constexpr int reschedule_every_n_blocks = 48;
 void PlayStation3::step() {
     ppu->step();
-    spu->step();
+    if (tmp) spu->step();
+    if (ppu->state.pc == 0xb9a370) tmp = true;
 
     if (force_scheduler_update || curr_block_cycles++ >= 2048) {
         scheduler.tick(curr_block_cycles);
