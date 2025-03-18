@@ -6,7 +6,7 @@ bool Lv2Mutex::isFree() {
     return owner == -1;
 }
 
-void Lv2Mutex::lock(PlayStation3* ps3) {
+void Lv2Mutex::lock() {
     Thread* curr_thread = ps3->thread_manager.getCurrentThread();
     if (isFree())
         owner = curr_thread->id;
@@ -17,7 +17,7 @@ void Lv2Mutex::lock(PlayStation3* ps3) {
     }
 }
 
-void Lv2Mutex::unlock(PlayStation3* ps3) {
+void Lv2Mutex::unlock() {
     Thread* curr_thread = ps3->thread_manager.getCurrentThread();
     if (isFree() || owner == curr_thread->id) {
         if (wait_list.size()) {

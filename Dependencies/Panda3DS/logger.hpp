@@ -72,6 +72,7 @@ static Logger sys_semaphore     = Logger<true> ("[Syscall][sys_semaphore ] ");
 static Logger sys_ppu_thread    = Logger<true> ("[Syscall][sys_ppu_thread] ");
 static Logger sys_prx           = Logger<true> ("[Syscall][sys_prx       ] ");
 static Logger sys_cond          = Logger<true> ("[Syscall][sys_cond      ] ");
+static Logger sys_rwlock        = Logger<true> ("[Syscall][sys_rwlock    ] ");
 static Logger sys_mutex         = Logger<true> ("[Syscall][sys_mutex     ] ");
 static Logger sys_event         = Logger<true> ("[Syscall][sys_event     ] ");
 static Logger sys_vm            = Logger<true> ("[Syscall][sys_vm        ] ");
@@ -98,7 +99,7 @@ static Logger loader_game       = Logger<1>    ("[Loader ][Game          ] ");
 static Logger manager_prx       = Logger<1>    ("[Manager][PRX           ] ");
 
 // Thread
-static Logger thread            = Logger<true> ("[Thread ][PPU           ] ");
+static Logger thread            = Logger<false>("[Thread ][PPU           ] ");
 static Logger thread_spu        = Logger<true> ("[Thread ][SPU           ] ");
 
 // Other

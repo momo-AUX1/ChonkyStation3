@@ -4,7 +4,7 @@
 
 
 // Returns true if the group was started successfully, false otherwise
-bool Lv2SPUThreadGroup::start(PlayStation3* ps3) {
+bool Lv2SPUThreadGroup::start() {
     if (started) return false;
 
     // TODO: Check if all the threads in this group are ready
@@ -19,11 +19,11 @@ bool Lv2SPUThreadGroup::start(PlayStation3* ps3) {
     // Send run event
     if (run_event_queue_id) {
         Lv2EventQueue* queue = (Lv2EventQueue*)ps3->lv2_obj.get<Lv2EventQueue>(run_event_queue_id);
-        queue->send(ps3, { SYS_SPU_THREAD_GROUP_EVENT_RUN_KEY, handle(), 0, 0 });
+        queue->send({ SYS_SPU_THREAD_GROUP_EVENT_RUN_KEY, handle(), 0, 0 });
     }
     return true;
 }
 
-std::string Lv2SPUThreadGroup::getName(PlayStation3* ps3) {
+std::string Lv2SPUThreadGroup::getName() {
     return Helpers::readString(ps3->mem.getPtr(attr->name_ptr));
 }

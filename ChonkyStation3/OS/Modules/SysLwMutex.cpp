@@ -14,7 +14,7 @@ u64 SysLwMutex::sysLwMutexLock() {
     }
 
     Lv2Mutex* lv2_mtx = ps3->lv2_obj.get<Lv2Mutex>(mtx->sleep_queue);
-    lv2_mtx->lock(ps3);
+    lv2_mtx->lock();
 
     return Result::CELL_OK;
 }
@@ -30,7 +30,7 @@ u64 SysLwMutex::sysLwMutexUnlock() {
     }
 
     Lv2Mutex* lv2_mtx = ps3->lv2_obj.get<Lv2Mutex>(mtx->sleep_queue);
-    lv2_mtx->unlock(ps3);
+    lv2_mtx->unlock();
 
     return Result::CELL_OK;
 }

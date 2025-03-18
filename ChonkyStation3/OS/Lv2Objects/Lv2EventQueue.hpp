@@ -7,9 +7,6 @@
 #include <Lv2Base.hpp>
 
 
-// Circular dependency
-class PlayStation3;
-
 class Lv2EventQueue : public virtual Lv2Base {
 public:
     Lv2EventQueue(Lv2Object* obj) : Lv2Base(obj) {}
@@ -25,6 +22,6 @@ public:
     std::queue<u64> wait_list;
     std::queue<Event> events;
 
-    void receive(PlayStation3* ps3);
-    void send(PlayStation3* ps3, Event event);
+    void receive();
+    void send(Event event);
 };

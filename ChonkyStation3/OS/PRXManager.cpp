@@ -13,6 +13,7 @@ PRXManager::PRXManager(PlayStation3* ps3) : ps3(ps3) {
         { "sysPrxForUser",      "liblv2.prx" },
         { "cellSync",           "libsre.prx" },
         { "cellSpurs",          "libsre.prx" },
+        { "cellSpursJq",        "libspurs_jq.prx" },
         { "cellKey2char",       "libkey2char.prx" },
         { "cellL10n",           "libl10n.prx" },
         { "cellFiber",          "libfiber.prx" },

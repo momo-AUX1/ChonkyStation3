@@ -25,7 +25,7 @@ u64 Syscall::sys_semaphore_wait() {
     log_sys_semaphore("sys_semaphore_wait(sema_id: %d, timeout: %lld)\n", sema_id, timeout);
 
     Lv2Semaphore* sema = ps3->lv2_obj.get<Lv2Semaphore>(sema_id);
-    sema->wait(ps3);
+    sema->wait();
 
     return Result::CELL_OK;
 }
@@ -36,7 +36,7 @@ u64 Syscall::sys_semaphore_post() {
     log_sys_semaphore("sys_semaphore_post(sema_id: %d, val: %d)\n", sema_id, val);
 
     Lv2Semaphore* sema = ps3->lv2_obj.get<Lv2Semaphore>(sema_id);
-    sema->post(ps3, val);
+    sema->post(val);
 
     return Result::CELL_OK;
 }

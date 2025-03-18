@@ -2,7 +2,7 @@
 #include "PlayStation3.hpp"
 
 
-void Lv2Semaphore::post(PlayStation3* ps3, u32 val) {
+void Lv2Semaphore::post(u32 val) {
     this->val = val;
 
     while (wait_list.size()) {
@@ -16,7 +16,7 @@ void Lv2Semaphore::post(PlayStation3* ps3, u32 val) {
     }
 }
 
-void Lv2Semaphore::wait(PlayStation3* ps3) {
+void Lv2Semaphore::wait() {
     if (val > 0)
         val--;
     else {

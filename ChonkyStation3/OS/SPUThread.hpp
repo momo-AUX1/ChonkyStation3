@@ -88,6 +88,7 @@ public:
     };
 
     enum MFC_Command : u32 {
+        PUT     = 0x20,
         GET     = 0x40,
         PUTLLC  = 0xb4,
         GETLLAR = 0xd0,
@@ -150,6 +151,7 @@ public:
 
     std::string channelToString(u32 ch);
     u32  readChannel(u32 ch);
+    u32  readChannelCount(u32 ch);
     void writeChannel(u32 ch, u32 val);
     void doCmd(u32 cmd);
 

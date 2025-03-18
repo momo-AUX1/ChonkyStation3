@@ -21,7 +21,7 @@ u64 Syscall::sys_mutex_lock() {
     log_sys_mutex("sys_mutex_lock(mutex_idx: %d, timeout: %d)\n", mutex_id, timeout);
 
     Lv2Mutex* mutex = ps3->lv2_obj.get<Lv2Mutex>(mutex_id);
-    mutex->lock(ps3);
+    mutex->lock();
 
     return Result::CELL_OK;
 }
@@ -31,7 +31,7 @@ u64 Syscall::sys_mutex_unlock() {
     log_sys_mutex("sys_mutex_unlock(mutex_id: %d)\n", mutex_id);
 
     Lv2Mutex* mutex = ps3->lv2_obj.get<Lv2Mutex>(mutex_id);
-    mutex->unlock(ps3);
+    mutex->unlock();
 
     return Result::CELL_OK;
 }

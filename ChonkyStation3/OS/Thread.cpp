@@ -122,7 +122,7 @@ void Thread::wakeUp() {
 void Thread::join(u32 id, u32 vptr) {
     waiter = id;
     this->vptr = vptr;
-    reschedule();
+    wait();
 }
 
 void Thread::exit(u64 exit_status) {

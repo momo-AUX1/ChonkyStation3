@@ -7,6 +7,7 @@
 #include <Lv2Objects/Lv2Mutex.hpp>
 #include <Lv2Objects/Lv2Cond.hpp>
 #include <Lv2Objects/Lv2Semaphore.hpp>
+#include <Lv2Objects/Lv2RwLock.hpp>
 
 
 // Circular dependency
@@ -72,6 +73,14 @@ public:
     u64 sys_cond_create();
     u64 sys_cond_wait();
     u64 sys_cond_signal();
+    u64 sys_cond_signal_all();
+
+    // sys_rwlock
+    u64 sys_rwlock_create();
+    u64 sys_rwlock_rlock();
+    u64 sys_rwlock_runlock();
+    u64 sys_rwlock_wlock();
+    u64 sys_rwlock_wunlock();
 
     // sys_prx
     u64 sys_prx_get_module_list();

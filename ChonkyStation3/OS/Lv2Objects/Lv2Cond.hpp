@@ -16,7 +16,7 @@ public:
     std::queue<u64> wait_list;
     bool signalled = false;;
 
-    bool signal(PlayStation3* ps3);
-    bool signalAll(PlayStation3* ps3);
-    bool wait(PlayStation3* ps3);
+    bool signal();
+    bool signalAll();
+    bool wait();
 };

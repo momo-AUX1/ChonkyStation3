@@ -7,6 +7,7 @@ SPUThread::SPUThread(PlayStation3* ps3, std::string name) : ps3(ps3) {
     this->name = name;
     log("Created SPU thread %d \"%s\"\n", id, name.c_str());
 
+    std::memset(ls, 0, 256_KB);
     lockline_waiter = new LocklineWaiter(ps3, id);
 }
 
@@ -85,7 +86,7 @@ void SPUThread::LocklineWaiter::waiter() {
         if (elapsed > 1000) {
             //printf("Timeout\n");
             //exit(0);
-            is_waiting = false;
+            //is_waiting = false;
         }
     }
     
@@ -193,12 +194,26 @@ u32 SPUThread::readChannel(u32 ch) {
 
         return event_stat.raw & event_mask;
     }
+    case SPU_RdMachStat:    return 0;   // TODO
+    case SPU_RdInMbox:      return 0;   // TODO
 
     case MFC_RdTagStat:     return 0xffffffff & tag_mask;   // TODO
     case MFC_RdAtomicStat:  return atomic_stat;             
 
     default:
         Helpers::panic("Unimplemented MFC channel read 0x%02x\n", ch);
+    }
+}
+
+u32 SPUThread::readChannelCount(u32 ch) {
+    log("Read cnt %s @ 0x%08x\n", channelToString(ch).c_str(), ps3->spu->state.pc);
+
+    switch (ch) {
+
+    case SPU_RdInMbox:  return 0;   // TODO
+
+    default:
+        Helpers::panic("Unimplemented MFC channel count read 0x%02x\n", ch);
     }
 }
 
@@ -209,6 +224,8 @@ void SPUThread::writeChannel(u32 ch, u32 val) {
      
     case SPU_WrEventMask:   event_mask      = val;      break;
     case SPU_WrEventAck:    event_stat.raw &= ~val;     break;
+    case SPU_WrOutMbox:     /* TODO */                  break;
+    case SPU_WrOutIntrMbox: /* TODO */                  break;
 
     case MFC_LSA:           lsa         = val;  break;
     case MFC_EAH:           eah         = val;  break;
@@ -226,7 +243,13 @@ void SPUThread::writeChannel(u32 ch, u32 val) {
 
 void SPUThread::doCmd(u32 cmd) {
     switch (cmd) {
-       
+     
+    case PUT: {
+        log("PUT\n");
+        std::memcpy(ps3->mem.getPtr(eal), &ls[lsa & 0x3ffff], size);
+        break;
+    }
+
     case GET: {
         log("GET\n");
         std::memcpy(&ls[lsa & 0x3ffff], ps3->mem.getPtr(eal), size);
@@ -273,7 +296,7 @@ void SPUThread::doCmd(u32 cmd) {
                 printf("0x%08x ", Helpers::bswap<u32>(*(u32*)&ls[lsa + (i * 0x10) + (j * 4)]));
             printf("\n");
         }*/
-
+        
         // Update atomic stat
         atomic_stat = 0;            // It gets overwritten on every command
         atomic_stat |= (1 << 2);    // getllar command completed

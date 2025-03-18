@@ -23,17 +23,27 @@ u64 Syscall::sys_cond_wait() {
     log_sys_cond("sys_cond_wait(cond_id: %d, timeout: %lld)\n", cond_id, timeout);
 
     Lv2Cond* cond = ps3->lv2_obj.get<Lv2Cond>(cond_id);
-    cond->wait(ps3);
+    cond->wait();
 
     return Result::CELL_OK;
 }
 
 u64 Syscall::sys_cond_signal() {
     const u32 cond_id = ARG0;
-    log_sys_cond("sys_cond_signal(cond_id: %d)\n");
+    log_sys_cond("sys_cond_signal(cond_id: %d)\n", cond_id);
 
     Lv2Cond* cond = ps3->lv2_obj.get<Lv2Cond>(cond_id);
-    cond->signal(ps3);
+    cond->signal();
+
+    return Result::CELL_OK;
+}
+
+u64 Syscall::sys_cond_signal_all() {
+    const u32 cond_id = ARG0;
+    log_sys_cond("sys_cond_signal_all(cond_id: %d)\n", cond_id);
+
+    Lv2Cond* cond = ps3->lv2_obj.get<Lv2Cond>(cond_id);
+    cond->signalAll();
 
     return Result::CELL_OK;
 }

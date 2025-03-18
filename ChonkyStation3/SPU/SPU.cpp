@@ -38,3 +38,15 @@ template void SPU::write(u64 addr, u8  data);
 template void SPU::write(u64 addr, u16 data);
 template void SPU::write(u64 addr, u32 data);
 template void SPU::write(u64 addr, u64 data);
+
+SPUTypes::GPR SPU::read128(u64 addr) {
+    SPUTypes::GPR data;
+    data.dw[1] = read<u64>(addr);
+    data.dw[0] = read<u64>(addr + 8);
+    return data;
+}
+
+void SPU::write128(u64 addr, SPUTypes::GPR data) {
+    write<u64>(addr, data.dw[1]);
+    write<u64>(addr + 8, data.dw[0]);
+}

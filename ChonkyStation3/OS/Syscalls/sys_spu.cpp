@@ -15,7 +15,7 @@ u64 Syscall::sys_raw_spu_create() {
     log_sys_spu("sys_raw_spu_create(id_ptr: 0x%08x, attr_ptr: 0x%08x) STUBBED\n", id_ptr, attr_ptr);
 
     ps3->mem.write<u32>(id_ptr, 0);
-    //ps3->mem.spu.alloc(SPU_MEM_SIZE);
+    ps3->mem.spu.alloc(SPU_MEM_SIZE);
     
     return Result::CELL_OK;
 }
@@ -31,7 +31,7 @@ u64 Syscall::sys_spu_thread_group_create() {
     sys_spu_thread_group_attribute* attr = (sys_spu_thread_group_attribute*)ps3->mem.getPtr(attr_ptr);
     group->attr = attr;
 
-    log_sys_spu("Created SPU thread group \"%s\"\n", group->getName(ps3).c_str());
+    log_sys_spu("Created SPU thread group \"%s\"\n", group->getName().c_str());
     ps3->mem.write<u32>(id_ptr, group->handle());
 
     return Result::CELL_OK;
@@ -74,7 +74,7 @@ u64 Syscall::sys_spu_thread_group_start() {
     log_sys_spu("sys_spu_thread_group_start(group_id: %d)\n", group_id);
 
     Lv2SPUThreadGroup* group = ps3->lv2_obj.get<Lv2SPUThreadGroup>(group_id);
-    group->start(ps3);
+    group->start();
 
     return Result::CELL_OK;
 }

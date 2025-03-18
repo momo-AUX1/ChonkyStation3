@@ -64,7 +64,8 @@ void SPULoader::load(u32 img_ptr, sys_spu_image* img) {
 
             if (size == seg->get_memory_size()) {
                 auto addr = ps3->mem.alloc(seg->get_memory_size())->vaddr;
-                std::memcpy(ps3->mem.getPtr(addr), seg->get_data(), size);
+                std::memcpy(ps3->mem.getPtr(addr), seg->get_data(), seg->get_file_size());
+                std::memset(ps3->mem.getPtr(addr + seg->get_file_size()), 0, size - seg->get_file_size());
 
                 segs[n_segs].type = SYS_SPU_SEGMENT_TYPE_COPY;
                 segs[n_segs].ls_addr = seg->get_virtual_address();

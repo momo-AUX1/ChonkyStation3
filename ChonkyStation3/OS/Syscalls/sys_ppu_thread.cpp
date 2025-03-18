@@ -26,7 +26,6 @@ u64 Syscall::sys_ppu_thread_join() {
 
     if (ps3->thread_manager.getThreadByID(thread_id)->status != Thread::ThreadStatus::Terminated) {
         ps3->thread_manager.getThreadByID(thread_id)->join(ps3->thread_manager.getCurrentThread()->id, vptr);
-        ps3->thread_manager.getCurrentThread()->wait();
     }
     else {
         ps3->mem.write<u64>(vptr, ps3->thread_manager.getThreadByID(thread_id)->exit_status);

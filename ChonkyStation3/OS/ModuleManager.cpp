@@ -334,6 +334,18 @@ void ModuleManager::init() {
         { 0xd0e766fe, { "cellUsbdInit",                                     std::bind(&ModuleManager::stub, this) } },
 
         { 0x571afaca, { "cellSslCertificateLoader",                         std::bind(&CellSsl::cellSslCertificateLoader, &cellSsl) } },
+        { 0xfb02c9d2, { "cellSslInit",                                      std::bind(&ModuleManager::stub, this) } },
+        
+        { 0x250c386c, { "cellHttpInit",                                     std::bind(&ModuleManager::stub, this) } },
+        { 0x4e4ee53a, { "cellHttpCreateClient",                             std::bind(&ModuleManager::stub, this) } },
+        { 0x9638f766, { "cellHttpInitCookie",                               std::bind(&ModuleManager::stub, this) } },
+        
+        { 0x522180bc, { "cellHttpsInit",                                    std::bind(&ModuleManager::stub, this) } },
+        
+        { 0x434419c8, { "cellHttpClientSetCookieStatus",                    std::bind(&ModuleManager::stub, this) } },
+        { 0x473cd9f1, { "cellHttpClientSetRedirectCallback",                std::bind(&ModuleManager::stub, this) } },
+        { 0x660d42a9, { "cellHttpClientSetAuthenticationCallback",          std::bind(&ModuleManager::stub, this) } },
+        { 0xb6feb84b, { "cellHttpClientSetTransactionStateCallback",        std::bind(&ModuleManager::stub, this) } },
         
         { 0x1e7bff94, { "cellSysCacheMount",                                std::bind(&CellSysCache::cellSysCacheMount, &cellSysCache) } },
         

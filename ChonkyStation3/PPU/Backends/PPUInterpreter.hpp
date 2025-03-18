@@ -149,6 +149,7 @@ public:
     void neg        (const Instruction& instr);
     void nor        (const Instruction& instr);
     void subfe      (const Instruction& instr);
+    void adde       (const Instruction& instr);
     void mtcrf      (const Instruction& instr);
     void stdx       (const Instruction& instr);
     void stwcx      (const Instruction& instr);

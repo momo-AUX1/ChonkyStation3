@@ -7,9 +7,6 @@
 #include <Lv2Base.hpp>
 
 
-// Circular dependency
-class PlayStation3;
-
 class Lv2Mutex : public virtual Lv2Base {
 public:
     Lv2Mutex(Lv2Object* obj) : Lv2Base(obj) {}
@@ -18,6 +15,6 @@ public:
     std::queue<u64> wait_list;
 
     bool isFree();
-    void lock(PlayStation3* ps3);
-    void unlock(PlayStation3* ps3);
+    void lock();
+    void unlock();
 };

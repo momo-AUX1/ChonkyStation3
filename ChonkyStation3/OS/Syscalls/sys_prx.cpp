@@ -79,5 +79,8 @@ u64 Syscall::sys_prx_get_module_id_by_name() {
     const std::string name = Helpers::readString(ps3->mem.getPtr(name_ptr));
     log_sys_prx("sys_prx_get_module_id_by_name(name_ptr: 0x%08x, flags: 0x%016llx, opt_ptr: 0x%08x) [name: %s]\n", name_ptr, flags, opt_ptr, name.c_str());
 
+    // libprof is a profiling library unavailable on retail consoles
+    if (name == "cellLibprof") return 0x8001112e;   // CELL_PRX_ERROR_UNKNOWN_MODULE
+
     return ps3->handle_manager.request();
 }

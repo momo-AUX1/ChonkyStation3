@@ -168,6 +168,7 @@ void PPUInterpreter::step() {
         switch (instr.g_1f_field) {
 
         case CMP:       cmp(instr);     break;
+        //case TW:        ps3->thread_manager.getCurrentThread()->wait(); break;
         case LVSL:      lvsl(instr);    break;
         case SUBFC:     subfc(instr);   break;
         case MULHDU:    mulhdu(instr);  break;
@@ -186,7 +187,7 @@ void PPUInterpreter::step() {
         case SUBF:      subf(instr);    break;
         case CNTLZD:    cntlzd(instr);  break;
         case ANDC:      andc(instr);    break;
-        case LVEWX:     lvewx(instr);  break;
+        case LVEWX:     lvewx(instr);   break;
         case MULHD:     mulhd(instr);   break;
         case MULHW:     mulhw(instr);   break;
         case LDARX:     ldarx(instr);   break;
@@ -195,6 +196,7 @@ void PPUInterpreter::step() {
         case NEG:       neg(instr);     break;
         case NOR:       nor(instr);     break;
         case SUBFE:     subfe(instr);   break;
+        case ADDE:      adde(instr);    break;
         case MTCRF:     mtcrf(instr);   break;
         case STDX:      stdx(instr);    break;
         case STWCX_:    stwcx(instr);   break;
@@ -1347,6 +1349,22 @@ void PPUInterpreter::subfe(const Instruction& instr) {
     const auto res = ~a + b + state.xer.ca;
     state.xer.ca = res < a;
     state.gprs[instr.rt] = res;
+
+    if (instr.rc)
+        state.cr.compareAndUpdateCRField<s64>(0, state.gprs[instr.rt], 0);
+}
+
+void PPUInterpreter::adde(const Instruction& instr) {
+    Helpers::debugAssert(!instr.oe, "adde: oe bit set\n");
+
+    const auto a = state.gprs[instr.ra];
+    const auto b = state.gprs[instr.rb];
+    const auto res = a + b + state.xer.ca;
+    state.xer.ca = res < a;
+    state.gprs[instr.rt] = res;
+
+    if (instr.rc)
+        state.cr.compareAndUpdateCRField<s64>(0, state.gprs[instr.rt], 0);
 }
 
 void PPUInterpreter::mtcrf(const Instruction& instr) {

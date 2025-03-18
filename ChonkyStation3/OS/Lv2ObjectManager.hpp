@@ -19,7 +19,7 @@ public:
     template<typename T> requires std::is_base_of_v<Lv2Base, T>
     T* create() {
         const auto handle = handle_manager->request();
-        Lv2Object new_obj = Lv2Object(handle);
+        Lv2Object new_obj = Lv2Object(handle, ps3);
         objs.push_back(new_obj);
         objs.back().create<T>();
 

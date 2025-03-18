@@ -59,7 +59,7 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
         ps3->ppu->state.gprs[3] = Result::CELL_OK;
         break;
     }
-    case 30:    todo("_sys_process_get_paramsfo()");                                break;
+    case 30:    todo("sys_process_get_paramsfo()");                                 break;
     case 43:    ps3->ppu->state.gprs[3] = sys_ppu_thread_yield();                   break;
     case 44:    ps3->ppu->state.gprs[3] = sys_ppu_thread_join();                    break;
     case 47:    todo("sys_ppu_thread_set_priority()");                              break;
@@ -82,12 +82,13 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 106:   todo("sys_cond_destroy()");                                         break;
     case 107:   ps3->ppu->state.gprs[3] = sys_cond_wait();                          break;
     case 108:   ps3->ppu->state.gprs[3] = sys_cond_signal();                        break;
-    //case 109:   todo("sys_cond_signal_all()");                                      break;
+    case 109:   ps3->ppu->state.gprs[3] = sys_cond_signal_all();                    break;
     case 114:   ps3->ppu->state.gprs[3] = sys_semaphore_get_value();                break;
-    case 120:   todo("sys_rwlock_create()");                                        break;
-    case 124:   todo("sys_rwlock_runlock()");                                       break;
-    case 125:   todo("sys_rwlock_wlock()");                                         break;
-    case 127:   todo("sys_rwlock_wunlock()");                                       break;
+    case 120:   ps3->ppu->state.gprs[3] = sys_rwlock_create();                      break;
+    case 122:   ps3->ppu->state.gprs[3] = sys_rwlock_rlock();                       break;
+    case 124:   ps3->ppu->state.gprs[3] = sys_rwlock_runlock();                     break;
+    case 125:   ps3->ppu->state.gprs[3] = sys_rwlock_wlock();                       break;
+    case 127:   ps3->ppu->state.gprs[3] = sys_rwlock_wunlock();                     break;
     case 128:   ps3->ppu->state.gprs[3] = sys_event_queue_create();                 break;
     case 129:   todo("sys_event_queue_destroy()");                                  break;
     case 130:   ps3->ppu->state.gprs[3] = sys_event_queue_receive();                break;
@@ -142,6 +143,7 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 337:   ps3->ppu->state.gprs[3] = sys_mmapper_search_and_map();                         break;
     case 341:   todo("sys_memory_container_create()");                                          break;
     case 348:   ps3->ppu->state.gprs[3] = sys_memory_allocate();                                break;
+    case 351:   todo("sys_memory_get_page_attribute()");                                        break;
     case 352:   ps3->ppu->state.gprs[3] = sys_memory_get_user_memory_size();                    break;
     case 403: {   // puts
         std::string str;

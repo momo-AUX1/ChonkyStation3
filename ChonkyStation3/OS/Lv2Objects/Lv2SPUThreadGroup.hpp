@@ -10,9 +10,6 @@
 
 using namespace sys_spu;
 
-// Circular dependency
-class PlayStation3;
-
 class Lv2SPUThreadGroup : public virtual Lv2Base {
 public:
     Lv2SPUThreadGroup(Lv2Object* obj) : Lv2Base(obj) {}
@@ -22,6 +19,6 @@ public:
     bool started = false;
     u32 run_event_queue_id = 0;
 
-    bool start(PlayStation3* ps3);
-    std::string getName(PlayStation3* ps3);
+    bool start();
+    std::string getName();
 };

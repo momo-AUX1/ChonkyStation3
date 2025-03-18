@@ -17,6 +17,6 @@ public:
 
     std::queue<u64> wait_list;
 
-    void post(PlayStation3* ps3, u32 val);
-    void wait(PlayStation3* ps3);
+    void post(u32 val);
+    void wait();
 };

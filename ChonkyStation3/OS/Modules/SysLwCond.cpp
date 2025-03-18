@@ -9,7 +9,7 @@ u64 SysLwCond::sysLwCondWait() {
 
     LwCond* cond = (LwCond*)ps3->mem.getPtr(lwcond_ptr);
     Lv2LwCond* lv2_lwcond = ps3->lv2_obj.get<Lv2LwCond>(cond->id);
-    const auto res = lv2_lwcond->wait(ps3);
+    const auto res = lv2_lwcond->wait();
     if (!res) {
         log("WARNING: Tried to wait on a cond variable, but the current thread was not the mutex's owner\n");
         return Result::CELL_EPERM;
@@ -45,7 +45,7 @@ u64 SysLwCond::sysLwCondSignalAll() {
 
     LwCond* cond = (LwCond*)ps3->mem.getPtr(lwcond_ptr);
     Lv2LwCond* lv2_lwcond = ps3->lv2_obj.get<Lv2LwCond>(cond->id);
-    if (!lv2_lwcond->signalAll(ps3)) return ps3->ppu->state.gprs[3];   // Locking failed and this thread went to sleep - do not update R3 yet
+    if (!lv2_lwcond->signalAll()) return ps3->ppu->state.gprs[3];   // Locking failed and this thread went to sleep - do not update R3 yet
 
     return Result::CELL_OK;
 }
@@ -56,7 +56,7 @@ u64 SysLwCond::sysLwCondSignal() {
 
     LwCond* cond = (LwCond*)ps3->mem.getPtr(lwcond_ptr);
     Lv2LwCond* lv2_lwcond = ps3->lv2_obj.get<Lv2LwCond>(cond->id);
-    if (!lv2_lwcond->signal(ps3)) return ps3->ppu->state.gprs[3];   // Locking failed and this thread went to sleep - do not update R3 yet
+    if (!lv2_lwcond->signal()) return ps3->ppu->state.gprs[3];   // Locking failed and this thread went to sleep - do not update R3 yet
 
     return Result::CELL_OK;
 }

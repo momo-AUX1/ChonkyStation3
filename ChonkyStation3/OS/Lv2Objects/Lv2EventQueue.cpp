@@ -2,7 +2,7 @@
 #include "PlayStation3.hpp"
 
 
-void Lv2EventQueue::receive(PlayStation3* ps3) {
+void Lv2EventQueue::receive() {
     Thread* curr_thread = ps3->thread_manager.getCurrentThread();
     if (!events.empty()) {
         ps3->ppu->state.gprs[4] = events.front().source;
@@ -18,7 +18,7 @@ void Lv2EventQueue::receive(PlayStation3* ps3) {
     }
 }
 
-void Lv2EventQueue::send(PlayStation3* ps3, Event event) {
+void Lv2EventQueue::send(Event event) {
     if (wait_list.empty()) {
         events.push(event);
     }
