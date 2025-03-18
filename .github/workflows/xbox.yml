@@ -1,4 +1,4 @@
-name: Windows build
+name: Xbox build
 
 on:
   push:
@@ -40,10 +40,11 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          install: >
+          install: |
             base-devel
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-cmake
+            python3
 
       - name: Configure and Build Xbox Target with MinGW
         shell: msys2 {0}
@@ -53,6 +54,9 @@ jobs:
           cd buildxbox
           cmake -G "MinGW Makefiles" -DENABLE_XBOX_BUILD=ON ..
           mingw32-make
+          if [ -f "libChonkyStation3" ]; then
+              mv libChonkyStation3 libChonkyStation3.dll
+          fi
 
       - name: Upload Xbox Executable
         uses: actions/upload-artifact@v4
