@@ -40,10 +40,12 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
+          msystem: MINGW64
           install: |
             base-devel
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
             python3
 
       - name: Configure and Build Xbox Target with MinGW
