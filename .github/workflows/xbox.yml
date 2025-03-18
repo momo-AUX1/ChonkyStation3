@@ -46,12 +46,16 @@ jobs:
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
+            mingw-w64-x86_64-gcc
             python3
 
       - name: Configure and Build Xbox Target with MinGW
         shell: msys2 {0}
         run: |
+          # Update system packages
           pacman -Syu --noconfirm
+          export CC=x86_64-w64-mingw32-gcc
+          export CXX=x86_64-w64-mingw32-g++
           mkdir buildxbox
           cd buildxbox
           cmake -G "MinGW Makefiles" -DENABLE_XBOX_BUILD=ON ..
