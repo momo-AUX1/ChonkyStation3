@@ -14,23 +14,37 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch submodules
-        run: git submodule update --init --recursive
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: MINGW64
+          install: |
+            base-devel
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-gcc
+
       - name: Configure CMake with MinGW
-        run: cmake -B ${{github.workspace}}/build \
-                    -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                    -DENABLE_USER_BUILD=ON \
-                    -G "MinGW Makefiles" \
-                    -DCMAKE_SH="CMAKE_SH-NOTFOUND"
+        shell: msys2 {0}
+        run: |
+          cd "$(cygpath -u "$GITHUB_WORKSPACE")"
+          mkdir -p build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_USER_BUILD=ON -G "MinGW Makefiles" -DCMAKE_SH="CMAKE_SH-NOTFOUND" ..
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        shell: msys2 {0}
+        run: |
+          cd "$(cygpath -u "$GITHUB_WORKSPACE")/build"
+          mingw32-make
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
           name: ChonkyStation3 
-          path: ./build/Release/libChonkyStation3.dll
+          path: build/Release/libChonkyStation3.dll
 
   build_xbox:
     runs-on: windows-latest
@@ -53,10 +67,11 @@ jobs:
       - name: Configure and Build Xbox Target with MinGW
         shell: msys2 {0}
         run: |
+          cd "$(cygpath -u "$GITHUB_WORKSPACE")"
           pacman -Syu --noconfirm
           export CC=x86_64-w64-mingw32-gcc
           export CXX=x86_64-w64-mingw32-g++
-          mkdir buildxbox
+          mkdir -p buildxbox
           cd buildxbox
           cmake -G "MinGW Makefiles" -DENABLE_XBOX_BUILD=ON ..
           mingw32-make
@@ -68,4 +83,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ChonkyStation3_xbox
-          path: ./buildxbox/libChonkyStation3.dll
+          path: buildxbox/libChonkyStation3.dll
