@@ -12,14 +12,16 @@ env:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
       - name: Fetch submodules
         run: git submodule update --init --recursive
-
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_USER_BUILD=ON
+      - name: Configure CMake with MinGW
+        run: cmake -B ${{github.workspace}}/build \
+                    -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+                    -DENABLE_USER_BUILD=ON \
+                    -G "MinGW Makefiles" \
+                    -DCMAKE_SH="CMAKE_SH-NOTFOUND"
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
@@ -32,7 +34,6 @@ jobs:
 
   build_xbox:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +53,6 @@ jobs:
       - name: Configure and Build Xbox Target with MinGW
         shell: msys2 {0}
         run: |
-          # Update system packages
           pacman -Syu --noconfirm
           export CC=x86_64-w64-mingw32-gcc
           export CXX=x86_64-w64-mingw32-g++
