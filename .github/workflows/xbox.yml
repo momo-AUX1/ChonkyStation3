@@ -32,9 +32,7 @@ jobs:
       - name: Configure CMake with MinGW
         shell: msys2 {0}
         run: |
-          # Convert the GitHub workspace to a Unix-style path and cd into it
           cd "$(cygpath -u "$GITHUB_WORKSPACE")"
-          # (Optional) You can run this to double-check submodules are updated:
           git submodule update --init --recursive
           mkdir -p build
           cd build
