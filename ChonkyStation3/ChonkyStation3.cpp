@@ -432,6 +432,8 @@ extern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_
         }
         printf("external_main: GL context is now current\n");
         printf("external_main: Calling Prebootchecks\n");
+
+        SDL_setenv("SDL_AUDIODRIVER", "wasapi", 1);
         
 
         // Process file path if provided will probably never be used again in UWP (nvm!).
