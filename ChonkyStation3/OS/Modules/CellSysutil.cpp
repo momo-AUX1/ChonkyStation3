@@ -61,13 +61,13 @@ u64 CellSysutil::cellSysutilGetSystemParamString() {
     u32 size;
     switch (param) {
     case CELL_SYSUTIL_SYSTEMPARAM_ID_NICKNAME: {
-        str = "Alber";
+        str = ps3->settings.system.nickname;
         size = CELL_SYSUTIL_SYSTEMPARAM_NICKNAME_SIZE;
         break;
     }
 
     case CELL_SYSUTIL_SYSTEMPARAM_ID_CURRENT_USERNAME: {
-        str = "Alber";
+        str = ps3->settings.system.nickname;
         size = CELL_SYSUTIL_SYSTEMPARAM_CURRENT_USERNAME_SIZE;
         break;
     }

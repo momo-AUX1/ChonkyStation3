@@ -9,8 +9,10 @@
 #include <Frontend/GameWindow.hpp>
 #include "Frontend/UI/ui_mainwindow.h"
 #include <QtWidgets>
-#include "PlayStation3.hpp"
+#include <PlayStation3.hpp>
 #include <Loaders/Game/GameLoader.hpp>
+
+#include "SettingsWidget.hpp"
 
 
 class MainWindow : public QMainWindow {
@@ -19,6 +21,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow();
     Ui::Main ui;
+    SettingsWidget* settings;
 
     void setListItem(int row, int column, std::string str);
     void setListIcon(int row, fs::path icon);

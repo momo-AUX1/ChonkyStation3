@@ -95,6 +95,7 @@ public:
     u64 cellGcmGetOffsetTable();
     u64 cellGcmBindTile();
     u64 cellGcmSetFlipMode();
+    u64 cellGcmSetSecondVFrequency();
     u64 cellGcmSetDebugOutputLevel();
     u64 cellGcmMapEaIoAddressWithFlags();
     u64 cellGcmMapEaIoAddress();
@@ -118,6 +119,7 @@ public:
     u64 cellGcmSetFlip();
     u64 cellGcmGetConfiguration();
     u64 cellGcmGetLabelAddress();
+    u64 cellGcmSetVBlankFrequency();
 
     u64 cellGcmCallback();
 

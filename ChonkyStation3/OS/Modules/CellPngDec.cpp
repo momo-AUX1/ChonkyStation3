@@ -38,6 +38,21 @@ u64 CellPngDec::cellPngDecDecodeData() {
     if (err = lodepng::decode(img, width, height, state, buf))
         Helpers::panic("Failed to decode png %s: %s\n", curr_file.generic_string().c_str(), lodepng_error_text(err));
 
+    // Swizzle data
+    if (out_param.output_color_space == CELL_PNGDEC_ARGB) {
+        // Convert RGBA to ARGB
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                const u32 pixel = *(u32*)&img[y * width + (x * 4)];
+                const u8 r = pixel >> 24;
+                const u8 g = (pixel >> 16) & 0xff;
+                const u8 b = (pixel >> 8) & 0xff;
+                const u8 a = pixel & 0xff;
+                *(u32*)&img[y * width + (x * 4)] = (a << 24) | (r << 16) | (g << 8) | b;
+            }
+        }
+    }
+
     // Do we need padding?
     const u64 actual_width = width * n_components;
     if (ctrl->output_bytes_per_line > actual_width) {

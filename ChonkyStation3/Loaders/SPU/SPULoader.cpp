@@ -12,7 +12,7 @@ void SPULoader::load(u32 img_ptr, sys_spu_image* img) {
 
     // Try to dump the ELF to a file and load it
     // We don't know the actual size of the ELF yet, so we use the maximum possible size (~513KB)
-    // (each segment is at most 16KB, and there can be max 32 segments, 16KB * 32 = 512KB, add 1KB for the ELF headers)
+    // (each segment is at most 16KB, and there can be max 32 segments, 16KB * 32 = 512KB, add 1KB for the ELF headers even if they're a few bytes)
     std::string filename = std::format("{:08x}.elf", img_ptr);
     std::ofstream file(filename, std::ios::binary);
     file.write((char*)img_src, 513_KB);
@@ -62,26 +62,32 @@ void SPULoader::load(u32 img_ptr, sys_spu_image* img) {
         if (seg->get_type() == PT_LOAD) {
             const auto size = seg->get_memory_size();
 
-            if (size == seg->get_memory_size()) {
+            // Does this segment have any data?
+            if (seg->get_file_size()) {
                 auto addr = ps3->mem.alloc(seg->get_memory_size())->vaddr;
                 std::memcpy(ps3->mem.getPtr(addr), seg->get_data(), seg->get_file_size());
-                std::memset(ps3->mem.getPtr(addr + seg->get_file_size()), 0, size - seg->get_file_size());
+                std::memset(ps3->mem.getPtr(addr + seg->get_file_size()), 0, size - seg->get_file_size());  // Redundant, FILL type segments are for this
 
                 segs[n_segs].type = SYS_SPU_SEGMENT_TYPE_COPY;
                 segs[n_segs].ls_addr = seg->get_virtual_address();
                 segs[n_segs].src.addr = addr;
                 segs[n_segs].size = seg->get_memory_size();
+
+                n_segs++;
             }
-            else if (size < seg->get_memory_size()) {
+
+            if (size > seg->get_file_size()) {
                 segs[n_segs].type = SYS_SPU_SEGMENT_TYPE_FILL;
-                segs[n_segs].ls_addr = seg->get_virtual_address();
+                segs[n_segs].ls_addr = seg->get_virtual_address() + seg->get_file_size();
                 segs[n_segs].src.addr = 0;
-                segs[n_segs].size = seg->get_memory_size();
+                segs[n_segs].size = seg->get_memory_size() - seg->get_file_size();
+                
+                n_segs++;
             }
-            else {
+
+            if (size < seg->get_file_size()) {
                 Helpers::panic("SPULoader::load: segment file size > memory size\n");
             }
-            n_segs++;
         }
         else {
             Helpers::panic("SPULoader::load: unimplemented segment type %d\n", seg->get_type());

@@ -5,13 +5,15 @@
 
 PRXManager::PRXManager(PlayStation3* ps3) : ps3(ps3) {
     lle_modules = {
+        { "sys_fs",             "libfs.prx" },
         { "cellResc",           "libresc.prx" },
-        //{ "cellPngDec",         "libpngdec.prx" },
-        //{ "cellFont",           "libfont.prx" },
-        //{ "cellFontFT",         "libfontFT.prx" },
-        //{ "cell_FreeType2",     "libfreetype.prx" },
+        { "cellPngDec",         "libpngdec.prx" },
+        { "cellFont",           "libfont.prx" },
+        { "cellFontFT",         "libfontFT.prx" },
+        { "cell_FreeType2",     "libfreetype.prx" },
         { "sysPrxForUser",      "liblv2.prx" },
         { "cellSync",           "libsre.prx" },
+        { "cellSync2",          "libsync2.prx" },
         { "cellSpurs",          "libsre.prx" },
         { "cellSpursJq",        "libspurs_jq.prx" },
         { "cellKey2char",       "libkey2char.prx" },
@@ -30,6 +32,13 @@ void PRXManager::require(const std::string name) {
     if (!fs::exists(lib_path)) {
         Helpers::panic("Required %s is missing", lle_modules[name].c_str());
     }
+}
+
+bool PRXManager::isLLEModule(const std::string name) {
+    if (name == "sysPrxForUser")
+        return ps3->settings.lle.partialLv2LLE;
+
+    return lle_modules.contains(name) ? ps3->settings.lle.isLLEEnabled(name) : false;
 }
 
 bool PRXManager::isLibLoaded(const std::string name) {

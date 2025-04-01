@@ -203,6 +203,9 @@ PlayStation3::PlayStation3(const fs::path& executable) : elf_parser(executable),
     if (!(executable.generic_string() == "")) {
         elf_path = executable;
     }
+
+    // Load settings
+    settings.load();
 }
 
 PlayStation3::~PlayStation3() {
@@ -279,6 +282,15 @@ void PlayStation3::init() {
     catch (std::runtime_error e) {
         printCrashInfo(e);
     }
+
+    // SPU Debugging options
+    if (!settings.debug.enableSPUAfterPC.empty()) {
+        enable_spu_on_pc = std::stoul(settings.debug.enableSPUAfterPC, 0, 16);
+        spu_thread_to_enable = settings.debug.spuThreadToEnable;
+        mem.watchpoints_r[enable_spu_on_pc] = std::bind(&PlayStation3::enableSPUOnPC, this, std::placeholders::_1);
+        mem.markAsSlowMem(enable_spu_on_pc >> PAGE_SHIFT, true, false);
+        printf("Will enable SPU Thread %s on pc 0x%08x\n", spu_thread_to_enable.c_str(), enable_spu_on_pc);
+    }
 }
 
 void PlayStation3::run() {
@@ -294,13 +306,10 @@ void PlayStation3::run() {
     }
 }
 
-bool tmp = false;
-
-static constexpr int reschedule_every_n_blocks = 48;
+static constexpr int reschedule_every_n_blocks = 1024;
 void PlayStation3::step() {
     ppu->step();
-    if (tmp) spu->step();
-    if (ppu->state.pc == 0xb9a370) tmp = true;
+    spu->step();
 
     if (force_scheduler_update || curr_block_cycles++ >= 2048) {
         scheduler.tick(curr_block_cycles);
@@ -380,4 +389,16 @@ void PlayStation3::pressButton(u32 button) {
 void PlayStation3::resetButtons() {
     for (int i = 0; i < CELL_PAD_MAX_CODES; i++)
         module_manager.cellPad.buttons[i] = 0;
+}
+
+void PlayStation3::enableSPUOnPC(u32 unused) {
+    if (ppu->state.pc == enable_spu_on_pc) {
+        for (auto& i : spu_thread_manager.threads) {
+            if (i.name == spu_thread_to_enable) {
+                i.wakeUp();
+                mem.markAsFastMem(enable_spu_on_pc >> PAGE_SHIFT, mem.getPtr(enable_spu_on_pc & ~PAGE_MASK), true, true);
+                return;
+            }
+        }
+    }
 }

@@ -122,6 +122,35 @@ u64 Syscall::sys_spu_thread_group_connect_event() {
     return Result::CELL_OK;
 }
 
+u64 Syscall::sys_spu_thread_write_spu_mb() {
+    const u32 id = ARG0;
+    const u32 val = ARG1;
+    log_sys_spu("sys_spu_thread_write_spu_mb(id: %d, val: 0x%08x)\n", id, val);
+
+    SPUThread* thread = ps3->spu_thread_manager.getThreadByID(id);
+    Helpers::debugAssert(thread != nullptr, "sys_spu_thread_write_spu_mb: bad thread id (%d)\n", id);
+    thread->in_mbox.push(val);
+
+    return Result::CELL_OK;
+}
+
+u64 Syscall::sys_spu_thread_connect_event() {
+    const u32 id = ARG0;
+    const u32 equeue_id = ARG1;
+    const u32 etype = ARG2;
+    const u32 spup = ARG3;
+    log_sys_spu("sys_spu_thread_connect_event(id: %d, equeue_id: %d, etype: 0x%08x, spup: %d)\n", id, equeue_id, etype, spup);
+    Helpers::debugAssert(etype == SYS_SPU_THREAD_EVENT_USER, "sys_spu_thread_connect_event: etype != SYS_SPU_THREAD_EVENT_USER\n");
+
+    SPUThread* thread = ps3->spu_thread_manager.getThreadByID(id);
+    Helpers::debugAssert(thread != nullptr, "sys_spu_thread_connect_event: bad thread id (%d)\n", id);
+
+    if (thread->ports[spup] != -1) Helpers::panic("sys_spu_thread_connect_event: port was already connected\n");
+    thread->ports[spup] = equeue_id;
+    
+    return Result::CELL_OK;
+}
+
 u64 Syscall::sys_spu_thread_group_connect_event_all_threads() {
     const u32 id = ARG0;
     const u32 eq = ARG1;

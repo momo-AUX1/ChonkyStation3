@@ -28,7 +28,7 @@ public:
     std::vector<std::string> required_modules;  // List of required modules, load them with loadModules()
     std::vector<PRXLibraryInfo> libs;   // List of loaded libraries
 
-    bool isLLEModule(const std::string name) { return lle_modules.contains(name); }
+    bool isLLEModule(const std::string name);
     bool isLibLoaded(const std::string name);
     void require(const std::string name);
     bool loadModules(); // Returns true if at least 1 module was loaded

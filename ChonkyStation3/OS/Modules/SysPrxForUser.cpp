@@ -164,6 +164,13 @@ u64 SysPrxForUser::sysMemcpy() {
     return Result::CELL_OK;
 }
 
+u64 SysPrxForUser::sysMalloc() {
+    const u32 size = ARG0;
+    log("_sys_malloc(size: %d)\n", size);
+
+    return ps3->mem.alloc(size)->vaddr;
+}
+
 u64 SysPrxForUser::sysMemcmp() {
     const u32 buf1 = ARG0;
     const u32 buf2 = ARG1;

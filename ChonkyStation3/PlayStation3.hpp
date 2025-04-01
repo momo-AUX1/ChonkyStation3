@@ -5,6 +5,7 @@
 #include <functional>
 #include <unordered_map>
 
+#include <Settings.hpp>
 #include <PPU.hpp>
 #include <PPU/Backends/PPUInterpreter.hpp>
 #include <SPU.hpp>
@@ -48,6 +49,7 @@ public:
     Scheduler scheduler;
     Filesystem fs;
     
+    Settings settings;
     CrashAnalyzer crash_analyzer;
     GameLoader::InstalledGame curr_game;
     fs::path elf_path;
@@ -74,4 +76,9 @@ public:
 
     void pressButton(u32 button);
     void resetButtons();
+
+    // Debugging
+    void enableSPUOnPC(u32 unused);
+    u32 enable_spu_on_pc = 0;
+    std::string spu_thread_to_enable = "";
 };

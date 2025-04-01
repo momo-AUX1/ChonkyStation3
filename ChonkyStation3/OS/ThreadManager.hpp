@@ -40,5 +40,4 @@ public:
 private:
     MAKE_LOG_FUNCTION(log, thread);
     u32 next_thread_id = 0x10000;
-    u32 next_tls_addr = TLS_REGION_START;
 };

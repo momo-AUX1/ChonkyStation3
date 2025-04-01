@@ -128,6 +128,7 @@ void PPUInterpreter::step() {
         case CRANDC:    crandc(instr);  break;
         case ISYNC:     break;
         case CRNAND:    crnand(instr);  break;
+        case CRAND:     crand(instr);  break;
         case CRORC:     crorc(instr);   break;
         case CROR:      cror(instr);    break;
         case BCCTR:     bcctr(instr);   break;
@@ -1041,6 +1042,14 @@ void PPUInterpreter::crnand(const Instruction& instr) {
     state.cr.raw |= (~(a & b) & 1) << (31 - instr.bt);
 }
 
+void PPUInterpreter::crand(const Instruction& instr) {
+    const auto a = (state.cr.raw >> (31 - instr.ba)) & 1;
+    const auto b = (state.cr.raw >> (31 - instr.bb)) & 1;
+    state.cr.raw &= ~(1 << (31 - instr.bt));
+    state.cr.raw |= (a & b) << (31 - instr.bt);
+}
+
+
 void PPUInterpreter::crorc(const Instruction& instr) {
     const auto a = (state.cr.raw >> (31 - instr.ba)) & 1;
     const auto b = (state.cr.raw >> (31 - instr.bb)) & 1;
@@ -1226,13 +1235,13 @@ void PPUInterpreter::cntlzw(const Instruction& instr) {
 }
 
 void PPUInterpreter::slw(const Instruction& instr) {
-    state.gprs[instr.ra] = (u32)state.gprs[instr.rs] << (state.gprs[instr.rb] & 0x1f);
+    state.gprs[instr.ra] = safeShl<u32>((u32)state.gprs[instr.rs], state.gprs[instr.rb] & 0x3f);
     if (instr.rc)
         state.cr.compareAndUpdateCRField<s32>(0, state.gprs[instr.ra], 0);
 }
 
 void PPUInterpreter::sld(const Instruction& instr) {
-    state.gprs[instr.ra] = state.gprs[instr.rs] << (state.gprs[instr.rb] & 0x7f);
+    state.gprs[instr.ra] = safeShl<u64>(state.gprs[instr.rs], state.gprs[instr.rb] & 0x7f);
     if (instr.rc)
         state.cr.compareAndUpdateCRField<s64>(0, state.gprs[instr.ra], 0);
 }
@@ -1603,13 +1612,13 @@ void PPUInterpreter::lfsx(const Instruction& instr) {
 }
 
 void PPUInterpreter::srw(const Instruction& instr) {
-    state.gprs[instr.ra] = (u32)state.gprs[instr.rs] >> (state.gprs[instr.rb] & 0x3f);
+    state.gprs[instr.ra] = safeShr<u32>((u32)state.gprs[instr.rs], state.gprs[instr.rb] & 0x3f);
     if (instr.rc)
         state.cr.compareAndUpdateCRField<s64>(0, state.gprs[instr.ra], 0);
 }
 
 void PPUInterpreter::srd(const Instruction& instr) {
-    state.gprs[instr.ra] = state.gprs[instr.rs] >> (state.gprs[instr.rb] & 0x7f);
+    state.gprs[instr.ra] = safeShr<u64>(state.gprs[instr.rs], state.gprs[instr.rb] & 0x7f);
     if (instr.rc)
         state.cr.compareAndUpdateCRField<s64>(0, state.gprs[instr.ra], 0);
 }

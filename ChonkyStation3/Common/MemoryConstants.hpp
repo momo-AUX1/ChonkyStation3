@@ -12,7 +12,6 @@ static constexpr u64 RAM_END = RAM_START + RAM_SIZE;
 static constexpr u64 STACK_REGION_START = 0xD0000000;
 static constexpr u64 STACK_REGION_SIZE = 0x10000000;
 static constexpr u64 DEFAULT_STACK_SIZE = 0x40000;
-static constexpr u64 TLS_REGION_START = 0x20000000;    // ?
 static constexpr u64 RSX_VIDEO_MEM_SIZE = 256_MB;
 static constexpr u64 RSX_VIDEO_MEM_START = 0xC0000000;
 static constexpr u64 RSX_VIDEO_MEM_END = RSX_VIDEO_MEM_START + RSX_VIDEO_MEM_SIZE;

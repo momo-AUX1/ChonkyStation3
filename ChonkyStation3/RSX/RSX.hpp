@@ -86,6 +86,25 @@ public:
     u16 blend_equation_rgb = 0;
     u16 blend_equation_alpha = 0;
     u32 vertex_shader_load_addr = 0;
+
+    static constexpr GLuint swizzle_map[] = {
+        GL_ALPHA,
+        GL_RED,
+        GL_GREEN,
+        GL_BLUE,
+    };
+
+    static constexpr char swizzle_str_map[] = {
+        'a',
+        'r',
+        'g',
+        'b'
+    };
+
+    GLuint tex_swizzle_a = GL_ALPHA;
+    GLuint tex_swizzle_r = GL_RED;
+    GLuint tex_swizzle_g = GL_GREEN;
+    GLuint tex_swizzle_b = GL_BLUE;
     
 
     bool has_immediate_data = false;
@@ -178,8 +197,10 @@ public:
     void uploadFragmentUniforms();
     void uploadTexture();
 
+    u32 getRawTextureFormat(u8 fmt) { return fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN); }
     GLuint getTexturePixelFormat(u8 fmt);
     GLuint getTextureInternalFormat(u8 fmt);
+    GLuint getTextureDataType(u8 fmt);
     bool isCompressedFormat(u8 fmt);
     size_t getCompressedTextureSize(u8 fmt, u32 width, u32 height);
     GLuint getPrimitive(u32 prim);
@@ -434,7 +455,7 @@ public:
         NV4097_SET_TEXTURE_FORMAT                               = 0x00001a04,
         NV4097_SET_TEXTURE_ADDRESS                              = 0x00001a08,
         NV4097_SET_TEXTURE_CONTROL0                             = 0x00001a0c,
-        NV4097_SET_TEXTURE_CONTROL1                             = 0x00001a10,
+        NV4097_SET_TEXTURE_CONTROL1                             = 0x00001a10,   // I
         NV4097_SET_TEXTURE_FILTER                               = 0x00001a14,
         NV4097_SET_TEXTURE_IMAGE_RECT                           = 0x00001a18,   // I
         NV4097_SET_TEXTURE_BORDER_COLOR                         = 0x00001a1c,

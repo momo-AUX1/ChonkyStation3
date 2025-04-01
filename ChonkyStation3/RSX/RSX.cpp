@@ -210,6 +210,7 @@ void RSX::uploadTexture() {
     if (!cache.getTexture(hash, cached_texture)) {
         const auto fmt = getTexturePixelFormat(texture.format);
         const auto internal = getTextureInternalFormat(texture.format);
+        const auto type = getTextureDataType(texture.format);
 
         glGenTextures(1, &cached_texture.m_handle);
         glBindTexture(GL_TEXTURE_2D, cached_texture.m_handle);
@@ -220,7 +221,7 @@ void RSX::uploadTexture() {
         glActiveTexture(GL_TEXTURE0 + 0);
 
         if (!isCompressedFormat(texture.format)) {
-            glTexImage2D(GL_TEXTURE_2D, 0, internal, texture.width, texture.height, 0, fmt, GL_UNSIGNED_BYTE, (void*)ps3->mem.getPtr(texture.addr));
+            glTexImage2D(GL_TEXTURE_2D, 0, internal, texture.width, texture.height, 0, fmt, type, (void*)ps3->mem.getPtr(texture.addr));
         }
         else {
             glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal, texture.width, texture.height, 0, getCompressedTextureSize(texture.format, texture.width, texture.height), (void*)ps3->mem.getPtr(texture.addr));
@@ -235,37 +236,47 @@ void RSX::uploadTexture() {
 }
 
 GLuint RSX::getTextureInternalFormat(u8 fmt) {
-    switch (fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN)) {
+    switch (getRawTextureFormat(fmt)) {
 
     case CELL_GCM_TEXTURE_B8:               return GL_RED;
-    case CELL_GCM_TEXTURE_A8R8G8B8:         return GL_RGBA;
+    case CELL_GCM_TEXTURE_A8R8G8B8:         return GL_BGRA;
     case CELL_GCM_TEXTURE_D8R8G8B8:         return GL_BGRA;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT1:  return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT23: return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT45: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
     default:
-        Helpers::panic("Unimplemented texture format 0x%02x (0x%02x)\n", fmt, fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN));
+        Helpers::panic("Unimplemented texture format 0x%02x (0x%02x)\n", fmt, getRawTextureFormat(fmt));
     }
 }
 
 GLuint RSX::getTexturePixelFormat(u8 fmt) {
-    switch (fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN)) {
+    switch (getRawTextureFormat(fmt)) {
 
     case CELL_GCM_TEXTURE_B8:               return GL_RED;
-    case CELL_GCM_TEXTURE_A8R8G8B8:         return GL_RGBA;
+    case CELL_GCM_TEXTURE_A8R8G8B8:         return GL_BGRA;
     case CELL_GCM_TEXTURE_D8R8G8B8:         return GL_BGRA;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT1:  return GL_RGBA;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT23: return GL_RGBA;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT45: return GL_RGBA;
 
     default:
-        Helpers::panic("Unimplemented texture format 0x%02x (0x%02x)\n", fmt, fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN));
+        Helpers::panic("Unimplemented texture format 0x%02x (0x%02x)\n", fmt, getRawTextureFormat(fmt));
+    }
+}
+
+GLuint RSX::getTextureDataType(u8 fmt) {
+    switch (getRawTextureFormat(fmt)) {
+
+    case CELL_GCM_TEXTURE_A8R8G8B8:         return GL_UNSIGNED_INT_8_8_8_8_REV;
+
+    default:
+        return GL_UNSIGNED_BYTE;
     }
 }
 
 bool RSX::isCompressedFormat(u8 fmt) {
-    switch (fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN)) {
+    switch (getRawTextureFormat(fmt)) {
 
     case CELL_GCM_TEXTURE_COMPRESSED_DXT1:  return true;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT23: return true;
@@ -277,7 +288,7 @@ bool RSX::isCompressedFormat(u8 fmt) {
 }
 
 size_t RSX::getCompressedTextureSize(u8 fmt, u32 width, u32 height) {
-    switch (fmt & ~(CELL_GCM_TEXTURE_LN | CELL_GCM_TEXTURE_UN)) {
+    switch (getRawTextureFormat(fmt)) {
 
     case CELL_GCM_TEXTURE_COMPRESSED_DXT1:  return ((width + 3) / 4) * ((height + 3) / 4) * 8;
     case CELL_GCM_TEXTURE_COMPRESSED_DXT23: return ((width + 3) / 4) * ((height + 3) / 4) * 16;
@@ -398,10 +409,13 @@ void RSX::runCommandList(u64 put_addr) {
 
             if ((cmd & 0x00000003) == 0x00000002) { // call
                 Helpers::panic("rsx: call\n");
+                return;
             }
 
             if ((cmd & 0xffff0003) == 0x00020000) {
                 Helpers::panic("rsx: return\n");
+                gcm.ctrl->get = gcm.ctrl->put;
+                return;
             }
         }
 
@@ -814,6 +828,23 @@ void RSX::runCommandList(u64 put_addr) {
             break;
         }
 
+        case NV4097_SET_TEXTURE_CONTROL1: {
+            const bool rev = getRawTextureFormat(texture.format) == CELL_GCM_TEXTURE_A8R8G8B8;
+            tex_swizzle_a = swizzle_map[rev ? 3 - (args[0] & 3) : (args[0] & 3)];
+            tex_swizzle_r = swizzle_map[rev ? 3 - ((args[0] >> 2) & 3) : ((args[0] >> 2) & 3)];
+            tex_swizzle_g = swizzle_map[rev ? 3 - ((args[0] >> 4) & 3) : ((args[0] >> 4) & 3)];
+            tex_swizzle_b = swizzle_map[rev ? 3 - ((args[0] >> 6) & 3) : ((args[0] >> 6) & 3)];
+
+            u8 raw_fmt = getRawTextureFormat(texture.format);
+            if (raw_fmt != CELL_GCM_TEXTURE_B8 && raw_fmt != CELL_GCM_TEXTURE_X16 && raw_fmt != CELL_GCM_TEXTURE_X32_FLOAT) {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, tex_swizzle_a);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, tex_swizzle_r);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, tex_swizzle_g);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, tex_swizzle_b);
+            }
+            break;
+        }
+
         case NV4097_SET_TEXTURE_IMAGE_RECT: {
             const u16 width = args[0] >> 16;
             const u16 height = args[0] & 0xfffff;
@@ -821,7 +852,6 @@ void RSX::runCommandList(u64 put_addr) {
             
             texture.width = width;
             texture.height = height;
-            
             uploadTexture();
             break;
         }

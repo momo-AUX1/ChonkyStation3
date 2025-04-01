@@ -8,9 +8,10 @@ bool Lv2SPUThreadGroup::start() {
     if (started) return false;
 
     // TODO: Check if all the threads in this group are ready
-    for (auto& i : threads) {
-        ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Running;
-        if (ps3->spu_thread_manager.getThreadByID(i)->name != "highCellSpursKernel5") ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Terminated;
+    if (!ps3->settings.debug.disableSPU) {
+        for (auto& i : threads) {
+            ps3->spu_thread_manager.getThreadByID(i)->status = SPUThread::ThreadStatus::Running;
+        }
     }
 
     ps3->spu_thread_manager.reschedule();

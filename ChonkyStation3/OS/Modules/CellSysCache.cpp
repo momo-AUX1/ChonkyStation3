@@ -7,7 +7,7 @@ u64 CellSysCache::cellSysCacheMount() {
     log("cellSysCacheMount(param_ptr: 0x%08x)\n", param_ptr);
 
     CellSysCacheParam* param = (CellSysCacheParam*)ps3->mem.getPtr(param_ptr);
-    fs::path cache_path = "/dev_hdd1/caches/" + ps3->curr_game.id + "/" + Helpers::readString(param->cache_id);
+    cache_path = "/dev_hdd1/caches/" + ps3->curr_game.id + "/" + Helpers::readString(param->cache_id);
     Helpers::debugAssert(cache_path.generic_string().size() <= CELL_SYSCACHE_PATH_MAX, "cellSysCacheMount: path %s is too long\n", cache_path.generic_string().c_str());
 
     log("Mounting cache at %s\n", cache_path.generic_string().c_str());
@@ -15,4 +15,16 @@ u64 CellSysCache::cellSysCacheMount() {
     std::strcpy((char*)param->cache_path, cache_path.generic_string().c_str());
 
     return Result::CELL_OK;
+}
+
+u64 CellSysCache::cellSysCacheClear() {
+    log("cellSysCacheClear()\n");
+    Helpers::debugAssert(!cache_path.empty(), "cellSysCacheClear: cache was not mounted\n");
+
+    // Clear the cache
+    for (const auto& entry : fs::directory_iterator(ps3->fs.guestPathToHost(cache_path))) {
+        fs::remove_all(entry.path());
+    }
+
+    return Result::CELL_OK; // CELL_SYSCACHE_RET_OK_CLEARED
 }

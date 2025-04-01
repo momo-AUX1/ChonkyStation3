@@ -29,6 +29,21 @@ public:
         return (v << ((sizeof(T) * 8) - l)) >> ((sizeof(T) * 8) - l);
     }
 
+    template<typename T>
+    inline bool isShOK(int v) {
+        return !(v >= sizeof(T) * 8);
+    }
+
+    template<typename T>
+    inline T safeShl(T v, int sh) {
+        return isShOK<T>(sh) ? (v << sh) : 0;
+    }
+
+    template<typename T>
+    inline T safeShr(T v, int sh) {
+        return isShOK<T>(sh) ? (v >> sh) : 0;
+    }
+
     // Instruction table
     void (SPUInterpreter::*instr_table[INSTR_TABLE_SIZE])(const SPUInstruction&);
     void registerInstruction(u32 size, u32 opc, void (SPUInterpreter::*handler)(const SPUInstruction&));

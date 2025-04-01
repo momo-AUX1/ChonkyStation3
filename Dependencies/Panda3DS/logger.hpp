@@ -37,11 +37,13 @@ public:
 #ifdef CHONKYSTATION3_USER_BUILD
 #define true false
 #else
-//#define true false
+#define true false
 //#define false true
 #endif
 
 // Modules
+static Logger cellAudioOut      = Logger<true> ("[Module ][cellAudioOut  ] ");
+static Logger cellAudio         = Logger<true> ("[Module ][cellAudio     ] ");
 static Logger cellMsgDialog     = Logger<true> ("[Module ][cellMsgDialog ] ");
 static Logger cellSysCache      = Logger<true> ("[Module ][cellSysCache  ] ");
 static Logger cellSsl           = Logger<true> ("[Module ][cellSsl       ] ");
@@ -79,6 +81,7 @@ static Logger sys_vm            = Logger<true> ("[Syscall][sys_vm        ] ");
 static Logger sys_memory        = Logger<true> ("[Syscall][sys_memory    ] ");
 static Logger sys_mmapper       = Logger<true> ("[Syscall][sys_mmapper   ] ");
 static Logger sys_timer         = Logger<false>("[Syscall][sys_timer     ] ");
+static Logger sys_fs            = Logger<true> ("[Syscall][sys_fs        ] ");
 static Logger misc_sc           = Logger<true> ("[Syscall][Misc          ] ");
 static Logger tty               = Logger<1>    ();
 

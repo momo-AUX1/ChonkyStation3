@@ -42,7 +42,7 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     switch (syscall_num) {
     
     // cellGcmCallback
-    case 0x06: ps3->module_manager.cellGcmSys.cellGcmCallback(); break;
+    case 0x400: ps3->module_manager.cellGcmSys.cellGcmCallback(); break;
 
     case 1: {
         log_misc("sys_process_getpid()\n");
@@ -66,6 +66,7 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 48:    ps3->ppu->state.gprs[3] = sys_ppu_thread_get_priority();            break;
     case 49:    ps3->ppu->state.gprs[3] = sys_ppu_thread_get_stack_information();   break;
     case 82:    todo("sys_event_flag_create()");                                    break;
+    case 85:    ps3->ppu->state.gprs[3] = 0; break;
     case 90:    ps3->ppu->state.gprs[3] = sys_semaphore_create();                   break;
     case 91:    todo("sys_semaphore_destroy()");                                    break;
     case 92:    ps3->ppu->state.gprs[3] = sys_semaphore_wait();                     break;
@@ -123,10 +124,10 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
     case 173:   ps3->ppu->state.gprs[3] = sys_spu_thread_group_start();                         break;
     case 174:   todo("sys_spu_thread_group_suspend()");                                         break;
     case 178:   ps3->ppu->state.gprs[3] = sys_spu_thread_group_join();                          break;
-    //case 182:   todo("sys_spu_thread_read_ls()");                                               break;
+    case 182:   todo("sys_spu_thread_read_ls()");                                               break;
     case 185:   ps3->ppu->state.gprs[3] = sys_spu_thread_group_connect_event();                 break;
-    //case 190:   todo("sys_spu_thread_write_spu_mb()");                                          break;
-    case 191:   todo("sys_spu_thread_connect_event()");                                         break;
+    case 190:   ps3->ppu->state.gprs[3] = sys_spu_thread_write_spu_mb();                        break;
+    case 191:   ps3->ppu->state.gprs[3] = sys_spu_thread_connect_event();                       break;
     case 250:   todo("sys_spu_thread_group_set_cooperative_victims()");                         break;
     case 251:   ps3->ppu->state.gprs[3] = sys_spu_thread_group_connect_event_all_threads();     break;
     case 253:   todo("sys_spu_thread_group_syscall_253()");                                     break;
@@ -216,10 +217,12 @@ void Syscall::doSyscall(bool decrement_pc_if_module_call) {
         }
         break;
     }
-    case 811:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsMkdir();  break;
-    case 818:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsLseek();  break;
-    case 872:   todo("sys_ss_get_open_psid()"); break;
-    case 988:   ps3->ppu->state.gprs[3] = Result::CELL_OK;  break;
+    case 800:   ps3->ppu->state.gprs[3] = sys_fs_test();                                break;
+    case 811:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsMkdir();     break;
+    case 817:   ps3->ppu->state.gprs[3] = sys_fs_fcntl();                               break;
+    case 818:   ps3->ppu->state.gprs[3] = ps3->module_manager.cellFs.cellFsLseek();     break;
+    case 872:   todo("sys_ss_get_open_psid()");                                         break;
+    case 988:   ps3->ppu->state.gprs[3] = Result::CELL_OK;                              break;
 
     default:
         Helpers::panic("Unimplemented syscall number 0x%02x (%d) @ 0x%016llx\n", syscall_num, syscall_num, ps3->ppu->state.pc);

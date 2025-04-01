@@ -214,6 +214,8 @@ SPUInterpreter::SPUInterpreter(PlayStation3* ps3) : SPU(ps3) {
     registerInstruction(4, 0xf,     &SPUInterpreter::fms);
 }
 
+int cnt = 0;
+
 void SPUInterpreter::step() {
     if (!enabled) return; 
 
@@ -275,17 +277,17 @@ void SPUInterpreter::nor(const SPUInstruction& instr) {
 }
 
 void SPUInterpreter::rotm(const SPUInstruction& instr) {
-    state.gprs[instr.rt0].w[0] = state.gprs[instr.ra].w[0] >> ((0 - state.gprs[instr.rb].w[0]) & 0x3f);
-    state.gprs[instr.rt0].w[1] = state.gprs[instr.ra].w[1] >> ((0 - state.gprs[instr.rb].w[1]) & 0x3f);
-    state.gprs[instr.rt0].w[2] = state.gprs[instr.ra].w[2] >> ((0 - state.gprs[instr.rb].w[2]) & 0x3f);
-    state.gprs[instr.rt0].w[3] = state.gprs[instr.ra].w[3] >> ((0 - state.gprs[instr.rb].w[3]) & 0x3f);
+    state.gprs[instr.rt0].w[0] = safeShr<u32>(state.gprs[instr.ra].w[0], (0 - state.gprs[instr.rb].w[0]) & 0x3f);
+    state.gprs[instr.rt0].w[1] = safeShr<u32>(state.gprs[instr.ra].w[1], (0 - state.gprs[instr.rb].w[1]) & 0x3f);
+    state.gprs[instr.rt0].w[2] = safeShr<u32>(state.gprs[instr.ra].w[2], (0 - state.gprs[instr.rb].w[2]) & 0x3f);
+    state.gprs[instr.rt0].w[3] = safeShr<u32>(state.gprs[instr.ra].w[3], (0 - state.gprs[instr.rb].w[3]) & 0x3f);
 }
 
 void SPUInterpreter::shl(const SPUInstruction& instr) {
-    state.gprs[instr.rt0].w[0] = state.gprs[instr.ra].w[0] << (state.gprs[instr.rb].w[0] & 0x3f);
-    state.gprs[instr.rt0].w[1] = state.gprs[instr.ra].w[1] << (state.gprs[instr.rb].w[1] & 0x3f);
-    state.gprs[instr.rt0].w[2] = state.gprs[instr.ra].w[2] << (state.gprs[instr.rb].w[2] & 0x3f);
-    state.gprs[instr.rt0].w[3] = state.gprs[instr.ra].w[3] << (state.gprs[instr.rb].w[3] & 0x3f);
+    state.gprs[instr.rt0].w[0] = safeShl<u32>(state.gprs[instr.ra].w[0], state.gprs[instr.rb].w[0] & 0x3f);
+    state.gprs[instr.rt0].w[1] = safeShl<u32>(state.gprs[instr.ra].w[1], state.gprs[instr.rb].w[1] & 0x3f);
+    state.gprs[instr.rt0].w[2] = safeShl<u32>(state.gprs[instr.ra].w[2], state.gprs[instr.rb].w[2] & 0x3f);
+    state.gprs[instr.rt0].w[3] = safeShl<u32>(state.gprs[instr.ra].w[3], state.gprs[instr.rb].w[3] & 0x3f);
 }
 
 void SPUInterpreter::roti(const SPUInstruction& instr) {
@@ -298,32 +300,32 @@ void SPUInterpreter::roti(const SPUInstruction& instr) {
 
 void SPUInterpreter::rotmi(const SPUInstruction& instr) {
     const s32 sh = (0 - ext<s32, 7>(instr.i7)) & 0x3f;
-    state.gprs[instr.rt0].w[0] = state.gprs[instr.ra].w[0] >> sh;
-    state.gprs[instr.rt0].w[1] = state.gprs[instr.ra].w[1] >> sh;
-    state.gprs[instr.rt0].w[2] = state.gprs[instr.ra].w[2] >> sh;
-    state.gprs[instr.rt0].w[3] = state.gprs[instr.ra].w[3] >> sh;
+    state.gprs[instr.rt0].w[0] = safeShr<u32>(state.gprs[instr.ra].w[0], sh);
+    state.gprs[instr.rt0].w[1] = safeShr<u32>(state.gprs[instr.ra].w[1], sh);
+    state.gprs[instr.rt0].w[2] = safeShr<u32>(state.gprs[instr.ra].w[2], sh);
+    state.gprs[instr.rt0].w[3] = safeShr<u32>(state.gprs[instr.ra].w[3], sh);
 }
 
 void SPUInterpreter::rotmai(const SPUInstruction& instr) {
     const s32 sh = (0 - ext<s32, 7>(instr.i7)) & 0x3f;
-    state.gprs[instr.rt0].w[0] = (s32)state.gprs[instr.ra].w[0] >> sh;
-    state.gprs[instr.rt0].w[1] = (s32)state.gprs[instr.ra].w[1] >> sh;
-    state.gprs[instr.rt0].w[2] = (s32)state.gprs[instr.ra].w[2] >> sh;
-    state.gprs[instr.rt0].w[3] = (s32)state.gprs[instr.ra].w[3] >> sh;
+    state.gprs[instr.rt0].w[0] = safeShr<s32>((s32)state.gprs[instr.ra].w[0], sh);
+    state.gprs[instr.rt0].w[1] = safeShr<s32>((s32)state.gprs[instr.ra].w[1], sh);
+    state.gprs[instr.rt0].w[2] = safeShr<s32>((s32)state.gprs[instr.ra].w[2], sh);
+    state.gprs[instr.rt0].w[3] = safeShr<s32>((s32)state.gprs[instr.ra].w[3], sh);
 }
 
 void SPUInterpreter::shli(const SPUInstruction& instr) {
     const s32 sh = instr.i7 & 0x3f;
-    state.gprs[instr.rt0].w[0] = state.gprs[instr.ra].w[0] << sh;
-    state.gprs[instr.rt0].w[1] = state.gprs[instr.ra].w[1] << sh;
-    state.gprs[instr.rt0].w[2] = state.gprs[instr.ra].w[2] << sh;
-    state.gprs[instr.rt0].w[3] = state.gprs[instr.ra].w[3] << sh;
+    state.gprs[instr.rt0].w[0] = safeShl<u32>(state.gprs[instr.ra].w[0], sh);
+    state.gprs[instr.rt0].w[1] = safeShl<u32>(state.gprs[instr.ra].w[1], sh);
+    state.gprs[instr.rt0].w[2] = safeShl<u32>(state.gprs[instr.ra].w[2], sh);
+    state.gprs[instr.rt0].w[3] = safeShl<u32>(state.gprs[instr.ra].w[3], sh);
 }
 
 void SPUInterpreter::rothmi(const SPUInstruction& instr) {
     const s32 sh = (0 - ext<s32, 7>(instr.i7)) & 0x1f;
     for (int i = 0; i < 8; i++)
-        state.gprs[instr.rt0].h[i] = state.gprs[instr.ra].h[i] >> sh;
+        state.gprs[instr.rt0].h[i] = safeShr<u16>(state.gprs[instr.ra].h[i], sh);
 }
 
 void SPUInterpreter::a(const SPUInstruction& instr) {
@@ -443,27 +445,27 @@ void SPUInterpreter::lqx(const SPUInstruction& instr) {
 }
 
 void SPUInterpreter::rotqbybi(const SPUInstruction& instr) {
-    const s32 sh = (state.gprs[instr.rb].w[3] >> 3) & 0xf;
+    const s32 sh = (state.gprs[instr.rb].w[3] >> 3) & 0x1f;
     const auto temp = state.gprs[instr.ra];
     clr(state.gprs[instr.rt0]);
     for (int i = 0; i < 16; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[(i - sh) & 0xf];
+        state.gprs[instr.rt0].b[15 - i] = temp.b[(15 - (i + sh)) & 0xf];
 }
 
 void SPUInterpreter::rotqmbybi(const SPUInstruction& instr) {
-    const s32 sh = (0 - ((state.gprs[instr.rb].w[3] >> 3) & 0x1f)) & 0x1f;
+    const s32 sh = (0 - (state.gprs[instr.rb].w[3] >> 3)) & 0x1f;
     const auto temp = state.gprs[instr.ra];
     clr(state.gprs[instr.rt0]);
-    for (int i = 0; i < 16 - sh; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[i + sh];
+    for (int i = 0; i < 16; i++)
+        state.gprs[instr.rt0].b[15 - i] = (i >= sh) ? temp.b[15 - (i - sh)] : 0;
 }
 
 void SPUInterpreter::shlqbybi(const SPUInstruction& instr) {
-    const s32 sh = ((state.gprs[instr.rb].w[3] >> 3) & 0x1f);
+    const s32 sh = (state.gprs[instr.rb].w[3] >> 3) & 0x1f;
     const auto temp = state.gprs[instr.ra];
     clr(state.gprs[instr.rt0]);
-    for (int i = sh; i < 16; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[i - sh];
+    for (int i = 0; i < 16; i++)
+        state.gprs[instr.rt0].b[15 - i] = (i + sh) < 16 ? temp.b[15 - (i + sh)] : 0;
 }
 
 void SPUInterpreter::cbx(const SPUInstruction& instr) {
@@ -518,14 +520,13 @@ void SPUInterpreter::rotqby(const SPUInstruction& instr) {
     const s32 sh = state.gprs[instr.rb].w[3] & 0xf;
     const auto temp = state.gprs[instr.ra];
     for (int i = 0; i < 16; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[(i - sh) & 0xf];
+        state.gprs[instr.rt0].b[15 - i] = temp.b[(15 - (i + sh)) & 0xf];
 }
 
 void SPUInterpreter::orx(const SPUInstruction& instr) {
     clr(state.gprs[instr.rt0]);
     state.gprs[instr.rt0].w[3] = state.gprs[instr.ra].w[0] | state.gprs[instr.ra].w[1] | state.gprs[instr.ra].w[2] | state.gprs[instr.ra].w[3];
 }
-
 
 void SPUInterpreter::cbd(const SPUInstruction& instr) {
     const u32 t = (state.gprs[instr.ra].w[3] + ext<s8, 7>(instr.i7)) & 0xf;
@@ -568,23 +569,25 @@ void SPUInterpreter::rotqbyi(const SPUInstruction& instr) {
     const s32 sh = instr.i7 & 0xf;
     const auto temp = state.gprs[instr.ra];
     for (int i = 0; i < 16; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[(i - sh) & 0xf];
+        state.gprs[instr.rt0].b[15 - i] = temp.b[(15 - (i + sh)) & 0xf];
 }
 
 void SPUInterpreter::rotqmbyi(const SPUInstruction& instr) {
-    const s32 sh = (0 - ext<s32, 7>(instr.i7)) & 0x1f;
+    // It seems that this is the only rotate instruction where the manual doesn't say you have to sign extend i7.
+    // Is that a mistake in the manual? Does it make no difference if you sign extend it?
+    const u32 sh = (0 - instr.i7) & 0x1f;
     const auto temp = state.gprs[instr.ra];
     clr(state.gprs[instr.rt0]);
-    for (int i = 0; i < 16 - sh; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[i + sh];
+    for (int i = 0; i < 16; i++)
+        state.gprs[instr.rt0].b[15 - i] = (i >= sh) ? temp.b[15 - (i - sh)] : 0;
 }
 
 void SPUInterpreter::shlqbyi(const SPUInstruction& instr) {
     const s32 sh = instr.i7 & 0x1f;
     const auto temp = state.gprs[instr.ra];
     clr(state.gprs[instr.rt0]);
-    for (int i = sh; i < 16; i++)
-        state.gprs[instr.rt0].b[i] = temp.b[i - sh];
+    for (int i = 0; i < 16; i++)
+        state.gprs[instr.rt0].b[15 - i] = (i + sh < 16) ? temp.b[15 - (i + sh)] : 0;
 }
 
 void SPUInterpreter::nop(const SPUInstruction& instr) {}
@@ -675,10 +678,10 @@ void SPUInterpreter::addx(const SPUInstruction& instr) {
 }
 
 void SPUInterpreter::mpyh(const SPUInstruction& instr) {
-    state.gprs[instr.rt0].w[0] = ((s16)(state.gprs[instr.ra].w[0] >> 16) * (s16)(state.gprs[instr.rb].w[0] & 0xffff) << 16);
-    state.gprs[instr.rt0].w[1] = ((s16)(state.gprs[instr.ra].w[1] >> 16) * (s16)(state.gprs[instr.rb].w[1] & 0xffff) << 16);
-    state.gprs[instr.rt0].w[2] = ((s16)(state.gprs[instr.ra].w[2] >> 16) * (s16)(state.gprs[instr.rb].w[2] & 0xffff) << 16);
-    state.gprs[instr.rt0].w[3] = ((s16)(state.gprs[instr.ra].w[3] >> 16) * (s16)(state.gprs[instr.rb].w[3] & 0xffff) << 16);
+    state.gprs[instr.rt0].w[0] = ((s16)(state.gprs[instr.ra].w[0] >> 16) * (s16)(state.gprs[instr.rb].w[0] & 0xffff)) << 16;
+    state.gprs[instr.rt0].w[1] = ((s16)(state.gprs[instr.ra].w[1] >> 16) * (s16)(state.gprs[instr.rb].w[1] & 0xffff)) << 16;
+    state.gprs[instr.rt0].w[2] = ((s16)(state.gprs[instr.ra].w[2] >> 16) * (s16)(state.gprs[instr.rb].w[2] & 0xffff)) << 16;
+    state.gprs[instr.rt0].w[3] = ((s16)(state.gprs[instr.ra].w[3] >> 16) * (s16)(state.gprs[instr.rb].w[3] & 0xffff)) << 16;
 }
 
 void SPUInterpreter::ceqh(const SPUInstruction& instr) {
@@ -687,10 +690,10 @@ void SPUInterpreter::ceqh(const SPUInstruction& instr) {
 }
 
 void SPUInterpreter::mpyu(const SPUInstruction& instr) {
-    state.gprs[instr.rt0].w[0] = (state.gprs[instr.ra].w[0] & 0xffff) * (state.gprs[instr.rb].w[0] & 0xffff);
-    state.gprs[instr.rt0].w[1] = (state.gprs[instr.ra].w[1] & 0xffff) * (state.gprs[instr.rb].w[1] & 0xffff);
-    state.gprs[instr.rt0].w[2] = (state.gprs[instr.ra].w[2] & 0xffff) * (state.gprs[instr.rb].w[2] & 0xffff);
-    state.gprs[instr.rt0].w[3] = (state.gprs[instr.ra].w[3] & 0xffff) * (state.gprs[instr.rb].w[3] & 0xffff);
+    state.gprs[instr.rt0].w[0] = (u16)state.gprs[instr.ra].w[0] * (u16)state.gprs[instr.rb].w[0];
+    state.gprs[instr.rt0].w[1] = (u16)state.gprs[instr.ra].w[1] * (u16)state.gprs[instr.rb].w[1];
+    state.gprs[instr.rt0].w[2] = (u16)state.gprs[instr.ra].w[2] * (u16)state.gprs[instr.rb].w[2];
+    state.gprs[instr.rt0].w[3] = (u16)state.gprs[instr.ra].w[3] * (u16)state.gprs[instr.rb].w[3];
 }
 
 void SPUInterpreter::ceqb(const SPUInstruction& instr) {

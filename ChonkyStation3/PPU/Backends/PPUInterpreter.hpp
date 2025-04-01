@@ -21,6 +21,21 @@ public:
 
     u64 rotation_mask[64][64];
 
+    template<typename T>
+    inline bool isShOK(int v) {
+        return !(v >= sizeof(T) * 8);
+    }
+
+    template<typename T>
+    inline T safeShl(T v, int sh) {
+        return isShOK<T>(sh) ? (v << sh) : 0;
+    }
+
+    template<typename T>
+    inline T safeShr(T v, int sh) {
+        return isShOK<T>(sh) ? (v >> sh) : 0;
+    }
+
     void printCallStack();
     std::unordered_map<u32, std::string> known_funcs;   // Used for debugging
     std::vector<std::pair<u32, u32>> call_stack;    // First: addr of function, second: addr the function is called from
@@ -111,6 +126,7 @@ public:
     void crnor      (const Instruction& instr);
     void crandc     (const Instruction& instr);
     void crnand     (const Instruction& instr);
+    void crand      (const Instruction& instr);
     void crorc      (const Instruction& instr);
     void cror       (const Instruction& instr);
     void bcctr      (const Instruction& instr);

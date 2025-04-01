@@ -21,15 +21,7 @@ u64 SysThread::sysPPUThreadCreate() {
     if (thread->name == "spu_printf_handler"
         || thread->name == "_SPU_printf_server"
         || thread->name == "SpuPrintfHandler"
-        || thread->name == "soundmain"
         || thread->name == "SNKTrophy_Event_Thread"
-        //|| thread->name == "Job Manager Event Handler"
-        //|| thread->name == "mstream-update"
-        //|| thread->name == "FMOD BGM status query thread"
-        //|| thread->name == "FMOD libAudio event receive thread"
-        //|| thread->name == "FMOD stream thread"
-        //|| thread->name == "SPURS SystemWorkload Serv"
-        //|| thread->name.contains("SpursHdlr")
        )
         thread->status = Thread::ThreadStatus::Sleeping;
 

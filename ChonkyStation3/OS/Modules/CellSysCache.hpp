@@ -26,7 +26,10 @@ public:
         BEField<u32> reserved;
     };
 
+    fs::path cache_path;
+
     u64 cellSysCacheMount();
+    u64 cellSysCacheClear();
 
 private:
     MAKE_LOG_FUNCTION(log, cellSysCache);

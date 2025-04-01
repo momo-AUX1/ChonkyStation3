@@ -42,7 +42,7 @@ u64 CellGcmSys::cellGcmInitBody() {
     // Setup callback
     u32 callback_addr = ps3->mem.alloc(4 * 4)->vaddr;
     ps3->mem.write<u32>(callback_addr +  0, callback_addr + 4);
-    ps3->mem.write<u32>(callback_addr +  4, 0x39600006);     // li r11, 0x6
+    ps3->mem.write<u32>(callback_addr +  4, 0x39600400);     // li r11, 0x400
     ps3->mem.write<u32>(callback_addr +  8, 0x44000002);     // sc
     ps3->mem.write<u32>(callback_addr + 12, 0x4E800020);     // blr
 
@@ -204,6 +204,12 @@ u64 CellGcmSys::cellGcmBindTile() {
 u64 CellGcmSys::cellGcmSetFlipMode() {
     const u32 mode = ARG0;
     log("cellGcmSetFlipMode(mode: 0x%08x) UNIMPLEMENTED\n", mode);
+
+    return Result::CELL_OK;
+}
+
+u64 CellGcmSys::cellGcmSetSecondVFrequency() {
+    log("cellGcmSetSecondVFrequency() UNIMPLEMENTED\n");
 
     return Result::CELL_OK;
 }
@@ -478,6 +484,12 @@ u64 CellGcmSys::cellGcmGetLabelAddress() {
     log("cellGcmGetLabelAddress(idx: 0x%02x)\n", idx);
 
     return label_addr + 0x10 * idx;
+}
+
+u64 CellGcmSys::cellGcmSetVBlankFrequency() {
+    log("cellGcmSetVBlankFrequency() UNIMPLEMENTED\n");
+
+    return Result::CELL_OK;
 }
 
 

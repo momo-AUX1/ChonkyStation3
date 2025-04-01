@@ -4,11 +4,28 @@ MainWindow::MainWindow() : QMainWindow() {
     ps3 = new PlayStation3();
     game_loader = new GameLoader(ps3);
     game_window = new GameWindow();
-
+    settings = new SettingsWidget(ps3);
+    
+    // Qt6 UI
     ui.setupUi(this);
 
     // Setup menubar buttons
     connect(ui.actionOpen_ELF, &QAction::triggered, this, &MainWindow::launchELF);
+    
+    connect(ui.actionSystem, &QAction::triggered, this, [this]() {
+        settings->ui.tabWidget->setCurrentIndex(0);
+        settings->show();
+    });
+    
+    connect(ui.actionLLE, &QAction::triggered, this, [this]() {
+        settings->ui.tabWidget->setCurrentIndex(1);
+        settings->show();
+    });
+
+    connect(ui.actionDebug, &QAction::triggered, this, [this]() {
+        settings->ui.tabWidget->setCurrentIndex(2);
+        settings->show();
+        });
 
     int row = 0;
     int column = 0;

@@ -31,6 +31,8 @@
 #include <Modules/CellSsl.hpp>
 #include <Modules/CellSysCache.hpp>
 #include <Modules/CellMsgDialog.hpp>
+#include <Modules/CellAudio.hpp>
+#include <Modules/CellAudioOut.hpp>
 
 
 // Circular dependency
@@ -40,7 +42,8 @@ class ModuleManager {
 public:
     ModuleManager(PlayStation3* ps3) :  ps3(ps3), sysPrxForUser(ps3), sysThread(ps3), sysLwMutex(ps3), sysLwCond(ps3), sysMMapper(ps3), cellGcmSys(ps3), cellVideoOut(ps3), cellSysutil(ps3),
                                         cellSysmodule(ps3), cellResc(ps3), cellGame(ps3), cellSpurs(ps3), cellRtc(ps3), cellFs(ps3), cellPngDec(ps3), sceNpTrophy(ps3),
-                                        sceNp(ps3), cellSaveData(ps3), cellPad(ps3), cellKb(ps3), cellSsl(ps3), cellSysCache(ps3), cellMsgDialog(ps3) {}
+                                        sceNp(ps3), cellSaveData(ps3), cellPad(ps3), cellKb(ps3), cellSsl(ps3), cellSysCache(ps3), cellMsgDialog(ps3), cellAudio(ps3),
+                                        cellAudioOut(ps3) {}
     PlayStation3* ps3;
 
     void call(u32 nid);
@@ -82,6 +85,8 @@ public:
     CellSsl cellSsl;
     CellSysCache cellSysCache;
     CellMsgDialog cellMsgDialog;
+    CellAudio cellAudio;
+    CellAudioOut cellAudioOut;
 
     u64 stub();
 
